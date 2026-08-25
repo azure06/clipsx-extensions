@@ -1,3 +1,3 @@
 # Base64
 
-Detects, decodes, and encodes Base64 locally. UTF-8 values receive a compact decoded preview; binary values receive a bounded hexadecimal preview while transforms preserve exact bytes.
+An offline, bidirectional Base64 workbench for ClipsX. Every text clip can open an encoded preview; valid Base64 opens decoded UTF-8 or a bounded binary hex preview. Either side can be copied, and transform actions open a native preview before changing anything.

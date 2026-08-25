@@ -1,7 +1,7 @@
 schemaVersion = 2
 contractRevision = 2
 packageId = "firstparty.base64"
-version = "1.0.0"
+version = "1.1.0"
 apiVersion = "^2.0"
 displayName = "Base64"
 description = "Encode and decode Base64 text locally with explicit UTF-8 and binary diagnostics."
@@ -17,16 +17,16 @@ emitsFacetIds = ["base64"]
 mimeTypes = ["text/plain"]
 
 [[contributions]]
-id = "base64-detail"
+id = "base64-workbench"
 kind = "renderer"
-displayName = "Base64"
-purpose = "structured"
+displayName = "Base64 Codec"
+purpose = "source"
 surfaces = ["detail"]
 uiEntry = "ui/index.html"
 uiSurfaces = ["detail"]
 effects = ["copy"]
 [[contributions.matchers]]
-facetIds = ["firstparty.base64.base64"]
+mimeTypes = ["text/plain"]
 
 [[contributions]]
 id = "base64-codec"
@@ -39,10 +39,10 @@ mimeTypes = ["text/plain"]
 [[contributions]]
 id = "encode-base64"
 kind = "action"
-displayName = "Encode as Base64"
+displayName = "Encode with Base64"
 placements = ["action_menu"]
-effects = ["copy"]
-handler = { kind = "transformer_preset", transformerId = "base64-codec", parameters = { operation = "encode" }, disposition = "copy" }
+effects = ["preview", "copy", "save_as_clip"]
+handler = { kind = "transformer_preset", transformerId = "base64-codec", parameters = { operation = "encode" }, disposition = "preview" }
 [[contributions.matchers]]
 mimeTypes = ["text/plain"]
 
@@ -51,7 +51,7 @@ id = "decode-base64"
 kind = "action"
 displayName = "Decode Base64"
 placements = ["preview_toolbar", "action_menu"]
-effects = ["copy"]
-handler = { kind = "transformer_preset", transformerId = "base64-codec", parameters = { operation = "decode" }, disposition = "copy" }
+effects = ["preview", "copy", "save_as_clip"]
+handler = { kind = "transformer_preset", transformerId = "base64-codec", parameters = { operation = "decode" }, disposition = "preview" }
 [[contributions.matchers]]
 facetIds = ["firstparty.base64.base64"]

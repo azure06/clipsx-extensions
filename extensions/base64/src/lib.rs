@@ -49,7 +49,7 @@ impl bindings::Guest for Base64 {
         input: Representation,
         _: Option<Facet>,
     ) -> Result<CompactModel, GuestError> {
-        if id != "base64-detail" {
+        if id != "base64-workbench" {
             return Err(unsupported("unknown renderer"));
         }
         let bytes = decode(text(&input).unwrap_or_default().trim())
@@ -105,12 +105,24 @@ impl bindings::Guest for Base64 {
         Err(unsupported("actions use transformer presets"))
     }
     fn action_state(
-        _: String,
-        _: Representation,
+        id: String,
+        input: Representation,
         _: Option<Facet>,
         _: String,
     ) -> Result<ActionState, GuestError> {
-        Ok(ActionState::Enabled)
+        if id != "decode-base64" {
+            return Ok(ActionState::Enabled);
+        }
+        let available = text(&input)
+            .map(str::trim)
+            .and_then(decode)
+            .and_then(|bytes| String::from_utf8(bytes).ok())
+            .is_some();
+        Ok(if available {
+            ActionState::Enabled
+        } else {
+            ActionState::Disabled("Input is not UTF-8 Base64".into())
+        })
     }
 }
 fn text(i: &Representation) -> Option<&str> {
