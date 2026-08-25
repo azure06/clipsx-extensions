@@ -1,21 +1,77 @@
 schemaVersion = 2
 contractRevision = 2
 packageId = "firstparty.data-tools"
-version = "0.1.0"
+version = "1.0.0"
 apiVersion = "^2.0"
-displayName = "tools"
-description = "A ClipsX Extension API v2 package."
+displayName = "Data Tools"
+description = "Format JSON and convert structured data to compact JSON, CSV, or Markdown locally."
 license = "MIT"
-iconAssets = { light = "icons/package.svg", dark = "icons/package.svg" }
+iconAssets = { light = "icons/package-light.svg", dark = "icons/package-dark.svg" }
 
 [[contributions]]
-id = "text-view"
-kind = "renderer"
-displayName = "Text view"
-purpose = "source"
-surfaces = ["detail"]
-uiEntry = "ui/index.html"
-uiSurfaces = ["detail"]
-
+id = "data-transform"
+kind = "transformer"
+displayName = "Convert structured data"
+parameterSchema = { type = "object", properties = { operation = { type = "string", enum = ["format-json", "minify-json", "json-to-csv", "json-to-markdown", "csv-to-json", "csv-to-markdown"] } }, required = ["operation"] }
 [[contributions.matchers]]
-mimeTypes = ["text/plain"]
+mimeTypes = ["text/plain", "application/json", "text/csv"]
+
+[[contributions]]
+id = "format-json"
+kind = "action"
+displayName = "Format JSON"
+placements = ["action_menu"]
+effects = ["copy"]
+handler = { kind = "transformer_preset", transformerId = "data-transform", parameters = { operation = "format-json" }, disposition = "copy" }
+[[contributions.matchers]]
+facetIds = ["core.data.json"]
+
+[[contributions]]
+id = "minify-json"
+kind = "action"
+displayName = "Minify JSON"
+placements = ["action_menu"]
+effects = ["copy"]
+handler = { kind = "transformer_preset", transformerId = "data-transform", parameters = { operation = "minify-json" }, disposition = "copy" }
+[[contributions.matchers]]
+facetIds = ["core.data.json"]
+
+[[contributions]]
+id = "json-to-csv"
+kind = "action"
+displayName = "Convert JSON to CSV"
+placements = ["action_menu"]
+effects = ["preview", "copy", "save_as_clip"]
+handler = { kind = "transformer_preset", transformerId = "data-transform", parameters = { operation = "json-to-csv" }, disposition = "preview" }
+[[contributions.matchers]]
+facetIds = ["core.data.json"]
+
+[[contributions]]
+id = "json-to-markdown"
+kind = "action"
+displayName = "Convert JSON to Markdown table"
+placements = ["action_menu"]
+effects = ["preview", "copy", "save_as_clip"]
+handler = { kind = "transformer_preset", transformerId = "data-transform", parameters = { operation = "json-to-markdown" }, disposition = "preview" }
+[[contributions.matchers]]
+facetIds = ["core.data.json"]
+
+[[contributions]]
+id = "table-to-json"
+kind = "action"
+displayName = "Convert table to JSON"
+placements = ["action_menu"]
+effects = ["preview", "copy", "save_as_clip"]
+handler = { kind = "transformer_preset", transformerId = "data-transform", parameters = { operation = "csv-to-json" }, disposition = "preview" }
+[[contributions.matchers]]
+facetIds = ["core.data.table"]
+
+[[contributions]]
+id = "table-to-markdown"
+kind = "action"
+displayName = "Convert table to Markdown"
+placements = ["action_menu"]
+effects = ["preview", "copy", "save_as_clip"]
+handler = { kind = "transformer_preset", transformerId = "data-transform", parameters = { operation = "csv-to-markdown" }, disposition = "preview" }
+[[contributions.matchers]]
+facetIds = ["core.data.table"]

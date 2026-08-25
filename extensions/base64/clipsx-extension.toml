@@ -1,21 +1,57 @@
 schemaVersion = 2
 contractRevision = 2
 packageId = "firstparty.base64"
-version = "0.1.0"
+version = "1.0.0"
 apiVersion = "^2.0"
-displayName = "base64"
-description = "A ClipsX Extension API v2 package."
+displayName = "Base64"
+description = "Encode and decode Base64 text locally with explicit UTF-8 and binary diagnostics."
 license = "MIT"
-iconAssets = { light = "icons/package.svg", dark = "icons/package.svg" }
+iconAssets = { light = "icons/package-light.svg", dark = "icons/package-dark.svg" }
 
 [[contributions]]
-id = "text-view"
+id = "detect-base64"
+kind = "detector"
+displayName = "Base64 detector"
+emitsFacetIds = ["base64"]
+[[contributions.matchers]]
+mimeTypes = ["text/plain"]
+
+[[contributions]]
+id = "base64-detail"
 kind = "renderer"
-displayName = "Text view"
-purpose = "source"
+displayName = "Base64"
+purpose = "structured"
 surfaces = ["detail"]
 uiEntry = "ui/index.html"
 uiSurfaces = ["detail"]
+effects = ["copy"]
+[[contributions.matchers]]
+facetIds = ["firstparty.base64.base64"]
 
+[[contributions]]
+id = "base64-codec"
+kind = "transformer"
+displayName = "Base64 codec"
+parameterSchema = { type = "object", properties = { operation = { type = "string", enum = ["encode", "decode"] } }, required = ["operation"] }
 [[contributions.matchers]]
 mimeTypes = ["text/plain"]
+
+[[contributions]]
+id = "encode-base64"
+kind = "action"
+displayName = "Encode as Base64"
+placements = ["action_menu"]
+effects = ["copy"]
+handler = { kind = "transformer_preset", transformerId = "base64-codec", parameters = { operation = "encode" }, disposition = "copy" }
+[[contributions.matchers]]
+mimeTypes = ["text/plain"]
+
+[[contributions]]
+id = "decode-base64"
+kind = "action"
+displayName = "Decode Base64"
+placements = ["preview_toolbar", "action_menu"]
+effects = ["copy"]
+handler = { kind = "transformer_preset", transformerId = "base64-codec", parameters = { operation = "decode" }, disposition = "copy" }
+[[contributions.matchers]]
+facetIds = ["firstparty.base64.base64"]

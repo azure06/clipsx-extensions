@@ -1,21 +1,53 @@
 schemaVersion = 2
 contractRevision = 2
 packageId = "firstparty.jwt-inspector"
-version = "0.1.0"
+version = "1.0.0"
 apiVersion = "^2.0"
-displayName = "inspector"
-description = "A ClipsX Extension API v2 package."
+displayName = "JWT Inspector"
+description = "Inspect JWT headers, claims, and timestamps locally without implying signature verification."
 license = "MIT"
-iconAssets = { light = "icons/package.svg", dark = "icons/package.svg" }
+iconAssets = { light = "icons/package-light.svg", dark = "icons/package-dark.svg" }
+
+[[settings]]
+id = "show-raw"
+label = "Show raw JSON by default"
+kind = "boolean"
+default = false
 
 [[contributions]]
-id = "text-view"
+id = "detect-jwt"
+kind = "detector"
+displayName = "JWT detector"
+emitsFacetIds = ["jwt"]
+[[contributions.matchers]]
+mimeTypes = ["text/plain"]
+
+[[contributions]]
+id = "jwt-detail"
 kind = "renderer"
-displayName = "Text view"
-purpose = "source"
+displayName = "JWT"
+purpose = "structured"
 surfaces = ["detail"]
 uiEntry = "ui/index.html"
 uiSurfaces = ["detail"]
-
+effects = ["copy"]
 [[contributions.matchers]]
-mimeTypes = ["text/plain"]
+facetIds = ["firstparty.jwt-inspector.jwt"]
+
+[[contributions]]
+id = "extract-jwt"
+kind = "transformer"
+displayName = "Extract JWT JSON"
+parameterSchema = { type = "object", properties = { part = { type = "string", enum = ["header", "payload"] } }, required = ["part"] }
+[[contributions.matchers]]
+facetIds = ["firstparty.jwt-inspector.jwt"]
+
+[[contributions]]
+id = "copy-payload"
+kind = "action"
+displayName = "Copy JWT payload"
+placements = ["preview_toolbar", "action_menu"]
+effects = ["copy"]
+handler = { kind = "transformer_preset", transformerId = "extract-jwt", parameters = { part = "payload" }, disposition = "copy" }
+[[contributions.matchers]]
+facetIds = ["firstparty.jwt-inspector.jwt"]

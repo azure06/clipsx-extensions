@@ -3,6 +3,18 @@
 First-party extension sources for [ClipsX](https://github.com/azure06/clipsx).
 Extensions are optional and none are installed with the application by default.
 
+## First-party packages
+
+| Package | Purpose |
+| --- | --- |
+| Mermaid Viewer | Mermaid diagrams and fenced diagrams in enhanced Markdown |
+| Color Tools | Compact color preview and HEX/RGB/HSL copying |
+| Math Renderer | Offline mathematical notation rendering |
+| JWT Inspector | Unverified local JWT header and claim inspection |
+| Base64 | Local UTF-8/binary-aware Base64 encoding and decoding |
+| curl to fetch | Safe conversion of common HTTP(S) curl commands to JavaScript |
+| Data Tools | JSON, CSV, and Markdown table transforms |
+
 ## Repository boundary
 
 - `extensions/` contains one independently versioned package per directory.
@@ -31,7 +43,6 @@ npm run tool -- pack extensions/color-tools dist/color-tools.clipsx
 npm run tool -- validate dist/color-tools.clipsx
 ```
 
-Rust components target `wasm32-unknown-unknown`. Copy the release WASM to the
+Rust components target `wasm32-wasip2`. Copy the release WASM to the
 package root as `component.wasm` before packing; it remains an ignored build
 artifact.
-
