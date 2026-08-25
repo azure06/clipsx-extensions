@@ -43,6 +43,7 @@ npm run tool -- pack extensions/color-tools dist/color-tools.clipsx
 npm run tool -- validate dist/color-tools.clipsx
 ```
 
-Rust components target `wasm32-wasip2`. Copy the release WASM to the
+Rust guests target `wasm32-unknown-unknown`; the package tool componentizes
+that core module without ambient WASI imports. Copy the release WASM to the
 package root as `component.wasm` before packing; it remains an ignored build
 artifact.
