@@ -1,0 +1,54 @@
+schemaVersion = 2
+contractRevision = 2
+packageId = "firstparty.math"
+version = "1.0.0"
+apiVersion = "^2.0"
+displayName = "Math"
+description = "Fast, offline mathematical notation rendered with KaTeX."
+license = "MIT"
+iconAssets = { light = "icons/math-light.svg", dark = "icons/math-dark.svg" }
+
+[[settings]]
+id = "display-mode"
+label = "Use display mode by default"
+kind = "boolean"
+default = true
+
+[[settings]]
+id = "show-source"
+label = "Show formula source by default"
+kind = "boolean"
+default = false
+
+[[contributions]]
+id = "detect-math"
+kind = "detector"
+displayName = "Math detector"
+emitsFacetIds = ["math"]
+[[contributions.matchers]]
+mimeTypes = ["text/plain"]
+
+[[contributions]]
+id = "math-detail"
+kind = "renderer"
+displayName = "Math"
+purpose = "structured"
+surfaces = ["detail"]
+iconAsset = "icons/math-light.svg"
+uiEntry = "ui/index.html"
+uiSurfaces = ["detail", "dialog"]
+[[contributions.matchers]]
+facetIds = ["firstparty.math.math"]
+
+[[contributions]]
+id = "open-math-dialog"
+kind = "action"
+displayName = "Open Math"
+iconAsset = "icons/math-light.svg"
+placements = ["action_menu"]
+effects = ["open_dialog"]
+handler = { kind = "dialog" }
+uiEntry = "ui/index.html"
+uiSurfaces = ["dialog"]
+[[contributions.matchers]]
+facetIds = ["firstparty.math.math"]

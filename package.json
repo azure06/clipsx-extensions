@@ -1,0 +1,21 @@
+{
+  "name": "clipsx-extensions",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "scripts": {
+    "tool": "node scripts/clipsx-extension-tool.mjs",
+    "build:mermaid": "npm run build:mermaid-ui && node scripts/build-mermaid-runtime.mjs",
+    "build:mermaid-ui": "esbuild extensions/mermaid-viewer/ui/src/app.jsx --bundle --minify --format=iife --target=es2020 --outfile=extensions/mermaid-viewer/ui/app.js",
+    "sync:katex": "node scripts/sync-katex-assets.mjs"
+  },
+  "devDependencies": {
+    "esbuild": "^0.25.0",
+    "katex": "^0.16.22",
+    "mermaid": "^11.12.2",
+    "react": "^19.2.0",
+    "react-dom": "^19.2.0",
+    "react-markdown": "^10.1.0",
+    "remark-gfm": "^4.0.1"
+  }
+}

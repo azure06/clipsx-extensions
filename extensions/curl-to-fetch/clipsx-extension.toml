@@ -1,0 +1,21 @@
+schemaVersion = 2
+contractRevision = 2
+packageId = "firstparty.curl-to-fetch"
+version = "0.1.0"
+apiVersion = "^2.0"
+displayName = "fetch"
+description = "A ClipsX Extension API v2 package."
+license = "MIT"
+iconAssets = { light = "icons/package.svg", dark = "icons/package.svg" }
+
+[[contributions]]
+id = "text-view"
+kind = "renderer"
+displayName = "Text view"
+purpose = "source"
+surfaces = ["detail"]
+uiEntry = "ui/index.html"
+uiSurfaces = ["detail"]
+
+[[contributions.matchers]]
+mimeTypes = ["text/plain"]

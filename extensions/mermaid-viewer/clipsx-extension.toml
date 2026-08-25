@@ -1,0 +1,70 @@
+schemaVersion = 2
+contractRevision = 2
+packageId = "firstparty.mermaid"
+version = "1.0.0"
+apiVersion = "^2.0"
+displayName = "Mermaid"
+description = "Fast, offline Mermaid diagrams and enhanced Markdown rendering."
+license = "MIT"
+iconAssets = { light = "icons/mermaid.svg", dark = "icons/mermaid.svg" }
+
+[[settings]]
+id = "show-source"
+label = "Show diagram source by default"
+kind = "boolean"
+default = false
+
+[[settings]]
+id = "fit-diagram"
+label = "Fit diagrams to the available width"
+kind = "boolean"
+default = true
+
+[[contributions]]
+id = "detect-mermaid"
+kind = "detector"
+displayName = "Mermaid detector"
+emitsFacetIds = ["mermaid", "markdown-mermaid"]
+
+[[contributions.matchers]]
+mimeTypes = ["text/plain"]
+
+[[contributions]]
+id = "mermaid-detail"
+kind = "renderer"
+displayName = "Mermaid"
+purpose = "structured"
+surfaces = ["detail"]
+iconAsset = "icons/mermaid.svg"
+uiEntry = "ui/index.html"
+uiSurfaces = ["detail", "dialog"]
+
+[[contributions.matchers]]
+facetIds = ["firstparty.mermaid.mermaid"]
+
+[[contributions]]
+id = "markdown-mermaid-detail"
+kind = "renderer"
+displayName = "Markdown + Mermaid"
+purpose = "structured"
+surfaces = ["detail"]
+iconAsset = "icons/mermaid.svg"
+uiEntry = "ui/index.html"
+uiSurfaces = ["detail"]
+
+[[contributions.matchers]]
+facetIds = ["firstparty.mermaid.markdown-mermaid"]
+
+[[contributions]]
+id = "open-mermaid-dialog"
+kind = "action"
+displayName = "Open Mermaid"
+iconAsset = "icons/mermaid.svg"
+placements = ["action_menu"]
+effects = ["open_dialog"]
+handler = { kind = "dialog" }
+uiSurfaces = ["dialog"]
+uiEntry = "ui/index.html"
+
+[[contributions.matchers]]
+facetIds = ["firstparty.mermaid.mermaid", "firstparty.mermaid.markdown-mermaid"]

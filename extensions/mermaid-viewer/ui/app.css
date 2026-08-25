@@ -1,0 +1,168 @@
+:root {
+  color-scheme: light;
+  font: 14px/1.55 Inter, ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+  --canvas: rgb(248 250 252 / 38%);
+  --surface: rgb(255 255 255 / 48%);
+  --surface-raised: rgb(255 255 255 / 64%);
+  --diagram-surface: rgb(255 255 255 / 70%);
+  --diagram-toolbar: rgb(241 245 249 / 72%);
+  --text: #172033;
+  --text-soft: #64748b;
+  --line: rgb(100 116 139 / 18%);
+  --accent: #7c3aed;
+  --accent-soft: rgb(124 58 237 / 9%);
+  --danger: #b42318;
+  --danger-soft: #fff1f0;
+  --shadow: 0 18px 50px -36px rgb(30 41 59 / 58%);
+}
+
+:root[data-theme='dark'] {
+  color-scheme: dark;
+  --canvas: rgb(15 23 42 / 34%);
+  --surface: rgb(23 32 51 / 46%);
+  --surface-raised: rgb(30 41 59 / 62%);
+  --diagram-surface: rgb(0 0 0 / 20%);
+  --diagram-toolbar: rgb(255 255 255 / 5%);
+  --text: #eef2ff;
+  --text-soft: #94a3b8;
+  --line: rgb(226 232 240 / 12%);
+  --accent: #a78bfa;
+  --accent-soft: rgb(167 139 250 / 12%);
+  --danger: #fda29b;
+  --danger-soft: rgb(180 35 24 / 14%);
+  --shadow: 0 22px 58px -38px rgb(0 0 0 / 88%);
+}
+
+* { box-sizing: border-box; }
+html, body, #root { min-height: 100%; background: transparent; }
+body { margin: 0; color: var(--text); }
+button { font: inherit; }
+.viewer { display: grid; min-height: 100vh; padding: 16px; }
+.viewer.dialog-view { gap: 12px; }
+.viewer:not(.document-view) { grid-template-rows: 1fr; }
+.viewer.dialog-view:not(.document-view) { grid-template-rows: auto 1fr; }
+.viewer.document-view { align-content: start; }
+.app-bar, .diagram-toolbar { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.app-bar {
+  min-width: 0;
+  padding: 8px 10px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: var(--surface-raised);
+  box-shadow: var(--shadow);
+  backdrop-filter: blur(12px);
+}
+.identity { display: flex; align-items: center; min-width: 0; gap: 9px; }
+.identity > div { display: grid; min-width: 0; }
+.identity strong { font-size: 12px; letter-spacing: .01em; }
+.identity span:not(.mark) { overflow: hidden; color: var(--text-soft); font-size: 11px; text-overflow: ellipsis; white-space: nowrap; }
+.mark {
+  display: grid;
+  width: 28px;
+  height: 28px;
+  place-items: center;
+  border-radius: 9px;
+  background: var(--accent-soft);
+  color: var(--accent);
+  font: 700 13px/1 ui-monospace, "SFMono-Regular", Consolas, monospace;
+}
+.tool-button {
+  display: grid;
+  width: 30px;
+  height: 30px;
+  padding: 0;
+  place-items: center;
+  border: 1px solid transparent;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--text-soft);
+  cursor: pointer;
+}
+.tool-button svg { width: 15px; height: 15px; fill: none; stroke: currentColor; stroke-linecap: round; stroke-linejoin: round; stroke-width: 1.8; }
+.tool-button:hover { border-color: var(--line); background: var(--accent-soft); color: var(--accent); }
+.tool-button:focus-visible, a:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.diagram-card {
+  display: grid;
+  min-height: 0;
+  grid-template-rows: auto minmax(220px, 1fr) auto;
+  overflow: hidden;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  background: var(--diagram-surface);
+  box-shadow: var(--shadow);
+}
+.diagram-card.embedded { min-height: 300px; margin: 28px 0; box-shadow: none; }
+.diagram-toolbar { padding: 8px 10px; border-bottom: 1px solid var(--line); background: var(--diagram-toolbar); }
+.diagram-state { min-width: 0; color: var(--text-soft); font-size: 11px; }
+.diagram-state.ready { visibility: hidden; }
+.diagram-state.error { color: var(--danger); }
+.diagram-tools { display: flex; align-items: center; gap: 2px; }
+.diagram-tools output { min-width: 42px; color: var(--text-soft); font-size: 10px; text-align: center; }
+.diagram-viewport {
+  position: relative;
+  min-height: 220px;
+  overflow: hidden;
+  touch-action: none;
+  cursor: grab;
+  background-color: var(--diagram-surface);
+  background-image: radial-gradient(circle, color-mix(in srgb, var(--line) 62%, transparent) 1px, transparent 1px);
+  background-size: 18px 18px;
+}
+.diagram-viewport.dragging { cursor: grabbing; }
+.diagram { display: grid; min-width: 100%; min-height: 100%; place-items: center; padding: 32px; transform: translate(var(--diagram-x), var(--diagram-y)) scale(var(--diagram-scale)); transform-origin: top left; user-select: none; }
+.diagram.fit { transform: none; }
+.diagram.fit svg { max-width: 100%; height: auto; }
+.diagram.hidden { visibility: hidden; }
+.diagram svg { display: block; }
+.diagram-source { max-height: 34vh; margin: 0; overflow: auto; padding: 14px 16px; border-top: 1px solid var(--line); background: var(--canvas); white-space: pre-wrap; overflow-wrap: anywhere; }
+.markdown-document {
+  width: 100%;
+  min-width: 0;
+  background: transparent;
+  font-size: 14px;
+}
+.markdown-document > :first-child { margin-top: 0; }
+.markdown-document > :last-child { margin-bottom: 0; }
+.markdown-document > * + * { margin-top: 16px; }
+.markdown-document h1, .markdown-document h2, .markdown-document h3, .markdown-document h4 { margin-bottom: 0; color: var(--text); line-height: 1.25; }
+.markdown-document h1 { margin-top: 4px; font-size: 20px; font-weight: 600; letter-spacing: -.025em; }
+.markdown-document h2 { margin-top: 20px; font-size: 18px; font-weight: 600; letter-spacing: -.025em; }
+.markdown-document h3 { margin-top: 16px; font-size: 16px; font-weight: 600; }
+.markdown-document p { margin-bottom: 0; color: color-mix(in srgb, var(--text) 92%, transparent); line-height: 28px; }
+.markdown-document ul, .markdown-document ol { padding-left: 20px; color: color-mix(in srgb, var(--text) 92%, transparent); }
+.markdown-document ul { list-style: disc; }
+.markdown-document ol { list-style: decimal; }
+.markdown-document li { padding-left: 2px; }
+.markdown-document li + li { margin-top: 4px; }
+.markdown-document a { color: #0369a1; font-weight: 500; text-decoration: underline; text-decoration-color: rgb(56 189 248 / 60%); text-underline-offset: 4px; }
+:root[data-theme='dark'] .markdown-document a { color: #7dd3fc; }
+.markdown-document blockquote { margin-left: 0; padding: 8px 16px; border-left: 4px solid rgb(125 211 252 / 80%); background: rgb(240 249 255 / 60%); color: color-mix(in srgb, var(--text) 88%, transparent); font-style: italic; }
+:root[data-theme='dark'] .markdown-document blockquote { border-left-color: rgb(14 165 233 / 30%); background: rgb(14 165 233 / 10%); }
+.markdown-document code { border-radius: 4px; background: rgb(226 232 240 / 80%); padding: 2px 6px; color: #a21caf; font: .92em ui-monospace, "SFMono-Regular", Consolas, monospace; }
+:root[data-theme='dark'] .markdown-document code { background: rgb(255 255 255 / 10%); color: #f5d0fe; }
+.markdown-document pre:not(.diagram-source) { overflow: auto; padding: 12px 16px; border: 1px solid rgb(226 232 240 / 80%); border-radius: 12px; background: #020617; color: #f1f5f9; box-shadow: 0 1px 2px rgb(15 23 42 / 8%); }
+:root[data-theme='dark'] .markdown-document pre:not(.diagram-source) { border-color: rgb(255 255 255 / 10%); }
+.markdown-document pre code { padding: 0; background: transparent; color: inherit; }
+.markdown-document table { min-width: 100%; border-collapse: collapse; background: rgb(255 255 255 / 70%); font-size: 14px; }
+:root[data-theme='dark'] .markdown-document table { background: rgb(0 0 0 / 20%); }
+.markdown-document table:has(thead) { overflow: hidden; border: 1px solid rgb(226 232 240 / 80%); border-radius: 12px; }
+.markdown-document th, .markdown-document td { padding: 8px 12px; text-align: left; }
+.markdown-document th { border-bottom: 1px solid rgb(226 232 240 / 80%); background: rgb(241 245 249 / 80%); color: var(--text-soft); font-size: 12px; font-weight: 600; letter-spacing: .05em; text-transform: uppercase; }
+.markdown-document td { border-top: 1px solid rgb(241 245 249); color: color-mix(in srgb, var(--text) 88%, transparent); }
+:root[data-theme='dark'] .markdown-document th { border-color: rgb(255 255 255 / 10%); background: rgb(255 255 255 / 5%); }
+:root[data-theme='dark'] .markdown-document td { border-color: rgb(255 255 255 / 5%); }
+.markdown-document hr { border: 0; border-top: 1px solid var(--line); }
+.markdown-document img { max-width: 100%; }
+.markdown-document input[type='checkbox'] { accent-color: var(--accent); }
+.render-error, .fatal-error { color: var(--danger); }
+.render-error { position: absolute; inset: 0; display: grid; align-content: center; justify-items: center; gap: 4px; padding: 24px; background: var(--danger-soft); text-align: center; }
+.render-error span { color: var(--text-soft); font-size: 12px; }
+.fatal-error { margin: 16px; padding: 24px; border: 1px solid currentColor; border-radius: 12px; background: var(--danger-soft); }
+@media (max-width: 560px) {
+  .viewer { padding: 8px; }
+  .identity span:not(.mark), .diagram-state, .diagram-tools output { display: none; }
+  .diagram { padding: 20px; }
+}
+@media (prefers-reduced-motion: no-preference) {
+  .tool-button { transition: background-color 120ms ease, border-color 120ms ease, color 120ms ease; }
+}
