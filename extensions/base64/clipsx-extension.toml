@@ -1,10 +1,10 @@
 schemaVersion = 2
 contractRevision = 2
 packageId = "firstparty.base64"
-version = "1.1.0"
+version = "1.5.0"
 apiVersion = "^2.0"
 displayName = "Base64"
-description = "Encode and decode Base64 text locally with explicit UTF-8 and binary diagnostics."
+description = "Encode and decode Base64 text locally, right from the Actions menu."
 license = "MIT"
 iconAssets = { light = "icons/package-light.svg", dark = "icons/package-dark.svg" }
 
@@ -17,21 +17,14 @@ emitsFacetIds = ["base64"]
 mimeTypes = ["text/plain"]
 
 [[contributions]]
-id = "base64-workbench"
-kind = "renderer"
-displayName = "Base64 Codec"
-purpose = "source"
-surfaces = ["detail"]
-uiEntry = "ui/index.html"
-uiSurfaces = ["detail"]
-effects = ["copy"]
-[[contributions.matchers]]
-mimeTypes = ["text/plain"]
-
-[[contributions]]
 id = "base64-codec"
 kind = "transformer"
 displayName = "Base64 codec"
+# Backs the encode-base64/decode-base64 actions below via transformer_preset,
+# which already cover this transformer's full parameter space one click at a
+# time — exposing it a second time as a generic Transform-menu entry would
+# just duplicate those two actions.
+exposeInMenu = false
 parameterSchema = { type = "object", properties = { operation = { type = "string", enum = ["encode", "decode"] } }, required = ["operation"] }
 [[contributions.matchers]]
 mimeTypes = ["text/plain"]
@@ -50,7 +43,7 @@ mimeTypes = ["text/plain"]
 id = "decode-base64"
 kind = "action"
 displayName = "Decode Base64"
-placements = ["preview_toolbar", "action_menu"]
+placements = ["action_menu"]
 effects = ["preview", "copy", "save_as_clip"]
 handler = { kind = "transformer_preset", transformerId = "base64-codec", parameters = { operation = "decode" }, disposition = "preview" }
 [[contributions.matchers]]

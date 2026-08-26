@@ -42,34 +42,14 @@ impl bindings::Guest for Base64 {
         _: Representation,
         _: Option<Facet>,
     ) -> Result<RenderModel, GuestError> {
-        Err(unsupported("Base64 uses its custom view"))
+        Err(unsupported("Base64 has no custom view"))
     }
     fn render_compact(
-        id: String,
-        input: Representation,
+        _: String,
+        _: Representation,
         _: Option<Facet>,
     ) -> Result<CompactModel, GuestError> {
-        if id != "base64-workbench" {
-            return Err(unsupported("unknown renderer"));
-        }
-        let bytes = decode(text(&input).unwrap_or_default().trim())
-            .ok_or_else(|| invalid("invalid Base64"))?;
-        let utf8 = String::from_utf8(bytes.clone()).ok();
-        Ok(CompactModel {
-            leading: LeadingVisual::Monogram("64".into()),
-            title: Some(
-                utf8.as_deref()
-                    .and_then(|v| v.lines().next())
-                    .filter(|v| !v.is_empty())
-                    .unwrap_or("Base64 data")
-                    .chars()
-                    .take(80)
-                    .collect(),
-            ),
-            subtitle: Some(format!("{} decoded bytes", bytes.len())),
-            badge: Some(if utf8.is_some() { "UTF-8" } else { "Binary" }.into()),
-            accessibility_label: format!("Base64 value with {} decoded bytes", bytes.len()),
-        })
+        Err(unsupported("Base64 has no custom view"))
     }
     fn transform(
         id: String,
@@ -110,19 +90,27 @@ impl bindings::Guest for Base64 {
         _: Option<Facet>,
         _: String,
     ) -> Result<ActionState, GuestError> {
-        if id != "decode-base64" {
-            return Ok(ActionState::Enabled);
-        }
-        let available = text(&input)
+        let decodable = text(&input)
             .map(str::trim)
             .and_then(decode)
             .and_then(|bytes| String::from_utf8(bytes).ok())
             .is_some();
-        Ok(if available {
-            ActionState::Enabled
-        } else {
-            ActionState::Disabled("Input is not UTF-8 Base64".into())
-        })
+        // Only one of the two ever needs to be offered: this clip is either
+        // clearly decodable Base64, or it isn't — surface exactly the choice
+        // that applies instead of showing both and disabling one.
+        match id.as_str() {
+            "decode-base64" => Ok(if decodable {
+                ActionState::Enabled
+            } else {
+                ActionState::Hidden
+            }),
+            "encode-base64" => Ok(if decodable {
+                ActionState::Hidden
+            } else {
+                ActionState::Enabled
+            }),
+            _ => Ok(ActionState::Enabled),
+        }
     }
 }
 fn text(i: &Representation) -> Option<&str> {
@@ -206,6 +194,7 @@ fn unsupported(m: &str) -> GuestError {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use bindings::Guest;
     #[test]
     fn round_trip_utf8() {
         let s = "ClipsX 日本語";
@@ -226,5 +215,59 @@ mod tests {
         let bytes = decode(raw).unwrap();
         assert!(String::from_utf8(bytes).is_err());
         assert!(!raw.bytes().any(|byte| matches!(byte, b'=' | b'+' | b'/')));
+    }
+
+    fn text_input(value: &str) -> Representation {
+        Representation {
+            format_key: "test:text/plain".into(),
+            mime_type: Some("text/plain".into()),
+            storage_kind: "text".into(),
+            content: Content::Text(value.into()),
+        }
+    }
+
+    #[test]
+    fn action_state_offers_exactly_one_of_encode_or_decode() {
+        assert!(matches!(
+            Base64::action_state(
+                "decode-base64".into(),
+                text_input("SGVsbG8="),
+                None,
+                "{}".into()
+            )
+            .unwrap(),
+            ActionState::Enabled
+        ));
+        assert!(matches!(
+            Base64::action_state(
+                "encode-base64".into(),
+                text_input("SGVsbG8="),
+                None,
+                "{}".into()
+            )
+            .unwrap(),
+            ActionState::Hidden
+        ));
+
+        assert!(matches!(
+            Base64::action_state(
+                "decode-base64".into(),
+                text_input("ordinary prose"),
+                None,
+                "{}".into()
+            )
+            .unwrap(),
+            ActionState::Hidden
+        ));
+        assert!(matches!(
+            Base64::action_state(
+                "encode-base64".into(),
+                text_input("ordinary prose"),
+                None,
+                "{}".into()
+            )
+            .unwrap(),
+            ActionState::Enabled
+        ));
     }
 }
