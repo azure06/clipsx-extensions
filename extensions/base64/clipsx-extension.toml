@@ -1,20 +1,32 @@
 schemaVersion = 2
 contractRevision = 2
 packageId = "firstparty.base64"
-version = "1.5.0"
+version = "1.8.5"
 apiVersion = "^2.0"
 displayName = "Base64"
-description = "Encode and decode Base64 text locally, right from the Actions menu."
+description = "Encode captured text and binary data, and decode Base64 or MIME-preserving data URLs locally."
 license = "MIT"
-iconAssets = { light = "icons/package-light.svg", dark = "icons/package-dark.svg" }
+iconAssets = { light = "icons/binary-mark-light.svg", dark = "icons/binary-mark-dark.svg" }
 
 [[contributions]]
 id = "detect-base64"
 kind = "detector"
 displayName = "Base64 detector"
 emitsFacetIds = ["base64"]
+inputLimitBytes = 10485760
 [[contributions.matchers]]
 mimeTypes = ["text/plain"]
+
+[[contributions]]
+id = "base64-summary"
+kind = "renderer"
+displayName = "Base64"
+purpose = "semantic"
+surfaces = ["detail", "compact"]
+inputLimitBytes = 10485760
+iconAssets = { light = "icons/binary-mark-light.svg", dark = "icons/binary-mark-dark.svg" }
+[[contributions.matchers]]
+facetIds = ["firstparty.base64.base64"]
 
 [[contributions]]
 id = "base64-codec"
@@ -25,26 +37,31 @@ displayName = "Base64 codec"
 # time — exposing it a second time as a generic Transform-menu entry would
 # just duplicate those two actions.
 exposeInMenu = false
+inputLimitBytes = 10485760
 parameterSchema = { type = "object", properties = { operation = { type = "string", enum = ["encode", "decode"] } }, required = ["operation"] }
 [[contributions.matchers]]
-mimeTypes = ["text/plain"]
+storageKinds = ["text", "binary_asset"]
 
 [[contributions]]
 id = "encode-base64"
 kind = "action"
 displayName = "Encode with Base64"
+iconAssets = { light = "icons/binary-mark-light.svg", dark = "icons/binary-mark-dark.svg" }
 placements = ["action_menu"]
 effects = ["preview", "copy", "save_as_clip"]
+inputLimitBytes = 10485760
 handler = { kind = "transformer_preset", transformerId = "base64-codec", parameters = { operation = "encode" }, disposition = "preview" }
 [[contributions.matchers]]
-mimeTypes = ["text/plain"]
+storageKinds = ["text", "binary_asset"]
 
 [[contributions]]
 id = "decode-base64"
 kind = "action"
 displayName = "Decode Base64"
+iconAssets = { light = "icons/binary-mark-light.svg", dark = "icons/binary-mark-dark.svg" }
 placements = ["action_menu"]
 effects = ["preview", "copy", "save_as_clip"]
+inputLimitBytes = 10485760
 handler = { kind = "transformer_preset", transformerId = "base64-codec", parameters = { operation = "decode" }, disposition = "preview" }
 [[contributions.matchers]]
 facetIds = ["firstparty.base64.base64"]
