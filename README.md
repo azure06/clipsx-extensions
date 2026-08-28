@@ -8,7 +8,6 @@ Extensions are optional and none are installed with the application by default.
 | Package | Purpose |
 | --- | --- |
 | Mermaid Viewer | Mermaid diagrams and fenced diagrams in enhanced Markdown |
-| Math Renderer | Offline mathematical notation rendering |
 | JWT Inspector | Unverified local JWT header and claim inspection |
 | Base64 | Local UTF-8/binary-aware Base64 encoding and decoding |
 | Data Tools | Tables, JSON/YAML/TOML, TypeScript shapes, and URL conversion |
