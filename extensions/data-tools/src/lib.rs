@@ -42,15 +42,6 @@ impl bindings::Guest for DataTools {
             .and_then(|v| v.as_str())
             .ok_or_else(|| invalid("operation is required"))?;
         let (value, mime) = match op {
-            "format-json" => (
-                serde_json::to_string_pretty(&json(raw)?)
-                    .map_err(|_| failed("could not format JSON"))?,
-                "application/json",
-            ),
-            "minify-json" => (
-                serde_json::to_string(&json(raw)?).map_err(|_| failed("could not minify JSON"))?,
-                "application/json",
-            ),
             "json-to-csv" => (json_to_csv(&json(raw)?)?, "text/csv"),
             "json-to-markdown" => (rows_to_markdown(json_rows(&json(raw)?)?)?, "text/markdown"),
             "csv-to-json" => {

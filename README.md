@@ -8,12 +8,10 @@ Extensions are optional and none are installed with the application by default.
 | Package | Purpose |
 | --- | --- |
 | Mermaid Viewer | Mermaid diagrams and fenced diagrams in enhanced Markdown |
-| Color Tools | Compact color preview and HEX/RGB/HSL copying |
 | Math Renderer | Offline mathematical notation rendering |
 | JWT Inspector | Unverified local JWT header and claim inspection |
 | Base64 | Local UTF-8/binary-aware Base64 encoding and decoding |
-| curl to fetch | Safe conversion of common HTTP(S) curl commands to JavaScript |
-| Data Tools | JSON, CSV, and Markdown table transforms |
+| Data Tools | JSON, CSV, and Markdown table conversion |
 
 ## Repository boundary
 
@@ -39,8 +37,8 @@ By default the tool wrapper uses a sibling `../clipsx` checkout. Set
 `CLIPSX_REPO` when the host repository is elsewhere.
 
 ```powershell
-npm run tool -- pack extensions/color-tools dist/color-tools.clipsx
-npm run tool -- validate dist/color-tools.clipsx
+npm run tool -- pack extensions/<package> dist/<package>.clipsx
+npm run tool -- validate dist/<package>.clipsx
 ```
 
 Rust guests target `wasm32-unknown-unknown`; the package tool componentizes

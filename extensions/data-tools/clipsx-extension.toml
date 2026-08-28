@@ -1,10 +1,10 @@
 schemaVersion = 2
 contractRevision = 2
 packageId = "firstparty.data-tools"
-version = "1.0.0"
+version = "1.0.1"
 apiVersion = "^2.0"
 displayName = "Data Tools"
-description = "Format JSON and convert structured data to compact JSON, CSV, or Markdown locally."
+description = "Convert structured data between JSON, CSV, and Markdown tables locally."
 license = "MIT"
 iconAssets = { light = "icons/package-light.svg", dark = "icons/package-dark.svg" }
 
@@ -12,29 +12,9 @@ iconAssets = { light = "icons/package-light.svg", dark = "icons/package-dark.svg
 id = "data-transform"
 kind = "transformer"
 displayName = "Convert structured data"
-parameterSchema = { type = "object", properties = { operation = { type = "string", enum = ["format-json", "minify-json", "json-to-csv", "json-to-markdown", "csv-to-json", "csv-to-markdown"] } }, required = ["operation"] }
+parameterSchema = { type = "object", properties = { operation = { type = "string", enum = ["json-to-csv", "json-to-markdown", "csv-to-json", "csv-to-markdown"] } }, required = ["operation"] }
 [[contributions.matchers]]
 mimeTypes = ["text/plain", "application/json", "text/csv"]
-
-[[contributions]]
-id = "format-json"
-kind = "action"
-displayName = "Format JSON"
-placements = ["action_menu"]
-effects = ["copy"]
-handler = { kind = "transformer_preset", transformerId = "data-transform", parameters = { operation = "format-json" }, disposition = "copy" }
-[[contributions.matchers]]
-facetIds = ["core.data.json"]
-
-[[contributions]]
-id = "minify-json"
-kind = "action"
-displayName = "Minify JSON"
-placements = ["action_menu"]
-effects = ["copy"]
-handler = { kind = "transformer_preset", transformerId = "data-transform", parameters = { operation = "minify-json" }, disposition = "copy" }
-[[contributions.matchers]]
-facetIds = ["core.data.json"]
 
 [[contributions]]
 id = "json-to-csv"
