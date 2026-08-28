@@ -11,7 +11,7 @@ Extensions are optional and none are installed with the application by default.
 | Math Renderer | Offline mathematical notation rendering |
 | JWT Inspector | Unverified local JWT header and claim inspection |
 | Base64 | Local UTF-8/binary-aware Base64 encoding and decoding |
-| Data Tools | JSON, CSV, and Markdown table conversion |
+| Data Tools | Tables, JSON/YAML/TOML, TypeScript shapes, and URL conversion |
 
 ## Repository boundary
 
