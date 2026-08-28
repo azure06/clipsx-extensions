@@ -42,27 +42,13 @@ impl bindings::Guest for JwtInspector {
         Err(unsupported("JWT uses its custom detail view"))
     }
     fn render_compact(
-        id: String,
-        input: Representation,
+        _: String,
+        _: Representation,
         _: Option<Facet>,
     ) -> Result<CompactModel, GuestError> {
-        if id != "jwt-detail" {
-            return Err(unsupported("unknown renderer"));
-        }
-        let (header, payload) = decode_token(text(&input).unwrap_or_default().trim())
-            .ok_or_else(|| invalid("invalid JWT"))?;
-        let alg = header.get("alg").and_then(|v| v.as_str()).unwrap_or("JWT");
-        let subject = payload
-            .get("sub")
-            .and_then(|v| v.as_str())
-            .or_else(|| payload.get("iss").and_then(|v| v.as_str()));
-        Ok(CompactModel {
-            leading: LeadingVisual::Monogram("JWT".into()),
-            title: Some(format!("JWT · {alg}")),
-            subtitle: subject.map(str::to_string),
-            badge: Some("Not verified".into()),
-            accessibility_label: format!("JWT using {alg}, signature not verified"),
-        })
+        Err(unsupported(
+            "JWT Inspector does not replace history previews",
+        ))
     }
     fn transform(
         id: String,
@@ -180,6 +166,7 @@ fn failed(m: &str) -> GuestError {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use bindings::Guest as _;
     #[test]
     fn accepts_structural_jwt_without_claiming_verification() {
         let t = "eyJhbGciOiJub25lIiwidHlwIjoiSldUIn0.eyJzdWIiOiIxMjMifQ.signature";
@@ -191,5 +178,32 @@ mod tests {
     fn rejects_wrong_segments_and_json() {
         assert!(decode_token("a.b").is_none());
         assert!(decode_token("abc.def.ghi").is_none());
+    }
+
+    #[test]
+    fn extracts_payload_as_pretty_json_for_copy() {
+        let input = Representation {
+            format_key: "mime:text/plain".into(),
+            mime_type: Some("text/plain".into()),
+            storage_kind: "text".into(),
+            content: Content::Text(
+                "eyJhbGciOiJub25lIiwidHlwIjoiSldUIn0.eyJzdWIiOiIxMjMiLCJhZG1pbiI6dHJ1ZX0.signature"
+                    .into(),
+            ),
+        };
+        let outputs = JwtInspector::transform(
+            "extract-jwt".into(),
+            input,
+            serde_json::json!({"part":"payload"}).to_string(),
+        )
+        .unwrap();
+
+        assert_eq!(outputs.len(), 1);
+        assert_eq!(outputs[0].format_key, "mime:application/json");
+        assert_eq!(outputs[0].mime_type, "application/json");
+        assert!(matches!(
+            &outputs[0].content,
+            OutputContent::Text(value) if value == "{\n  \"admin\": true,\n  \"sub\": \"123\"\n}"
+        ));
     }
 }

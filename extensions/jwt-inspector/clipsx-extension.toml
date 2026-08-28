@@ -1,12 +1,12 @@
 schemaVersion = 2
 contractRevision = 2
 packageId = "firstparty.jwt-inspector"
-version = "1.0.0"
+version = "1.2.1"
 apiVersion = "^2.0"
 displayName = "JWT Inspector"
 description = "Inspect JWT headers, claims, and timestamps locally without implying signature verification."
 license = "MIT"
-iconAssets = { light = "icons/package-light.svg", dark = "icons/package-dark.svg" }
+iconAssets = { light = "icons/jwt-mark-light.svg", dark = "icons/jwt-mark-dark.svg" }
 
 [[settings]]
 id = "show-raw"
@@ -28,6 +28,7 @@ kind = "renderer"
 displayName = "JWT"
 purpose = "structured"
 surfaces = ["detail"]
+iconAssets = { light = "icons/jwt-mark-light.svg", dark = "icons/jwt-mark-dark.svg" }
 uiEntry = "ui/index.html"
 uiSurfaces = ["detail"]
 effects = ["copy"]
@@ -38,6 +39,7 @@ facetIds = ["firstparty.jwt-inspector.jwt"]
 id = "extract-jwt"
 kind = "transformer"
 displayName = "Extract JWT JSON"
+exposeInMenu = false
 parameterSchema = { type = "object", properties = { part = { type = "string", enum = ["header", "payload"] } }, required = ["part"] }
 [[contributions.matchers]]
 facetIds = ["firstparty.jwt-inspector.jwt"]
@@ -46,7 +48,8 @@ facetIds = ["firstparty.jwt-inspector.jwt"]
 id = "copy-payload"
 kind = "action"
 displayName = "Copy JWT payload"
-placements = ["preview_toolbar", "action_menu"]
+iconAssets = { light = "icons/jwt-mark-light.svg", dark = "icons/jwt-mark-dark.svg" }
+placements = ["action_menu"]
 effects = ["copy"]
 handler = { kind = "transformer_preset", transformerId = "extract-jwt", parameters = { part = "payload" }, disposition = "copy" }
 [[contributions.matchers]]
