@@ -200,7 +200,7 @@ mimeTypes = ["application/toml"]
 id = "url-encode"
 kind = "action"
 displayName = "URL encode"
-icon = "link"
+iconAssets = { light = "icons/url-encode-light.svg", dark = "icons/url-encode-dark.svg" }
 placements = ["action_menu"]
 effects = ["preview", "copy", "save_as_clip"]
 handler = { kind = "transformer_preset", transformerId = "data-transform", parameters = { operation = "url-encode" }, disposition = "preview" }
@@ -211,7 +211,7 @@ facetIds = ["core.link.url"]
 id = "url-decode"
 kind = "action"
 displayName = "URL decode"
-icon = "link"
+iconAssets = { light = "icons/url-decode-light.svg", dark = "icons/url-decode-dark.svg" }
 placements = ["action_menu"]
 effects = ["preview", "copy", "save_as_clip"]
 handler = { kind = "transformer_preset", transformerId = "data-transform", parameters = { operation = "url-decode" }, disposition = "preview" }
@@ -222,7 +222,7 @@ facetIds = ["core.link.url"]
 id = "url-normalize"
 kind = "action"
 displayName = "Normalize URL"
-icon = "globe"
+iconAssets = { light = "icons/url-normalize-light.svg", dark = "icons/url-normalize-dark.svg" }
 placements = ["action_menu"]
 effects = ["preview", "copy", "save_as_clip"]
 handler = { kind = "transformer_preset", transformerId = "data-transform", parameters = { operation = "url-normalize" }, disposition = "preview" }

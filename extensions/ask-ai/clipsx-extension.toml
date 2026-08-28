@@ -6,6 +6,7 @@ apiVersion = "^2.0"
 displayName = "Ask AI"
 description = "Open selected text as an encoded prompt in ChatGPT or Claude."
 license = "MIT"
+iconAssets = { light = "icons/package-light.svg", dark = "icons/package-dark.svg" }
 
 [[contributions]]
 id = "ask-chatgpt"
