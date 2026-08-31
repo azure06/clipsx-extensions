@@ -1,6 +1,6 @@
 schemaVersion = 2
 contractRevision = 2
-packageId = "firstparty.jwt-inspector"
+packageId = "infiniti.jwt-inspector"
 version = "1.2.1"
 apiVersion = "^2.0"
 displayName = "JWT Inspector"
@@ -33,7 +33,7 @@ uiEntry = "ui/index.html"
 uiSurfaces = ["detail"]
 effects = ["copy"]
 [[contributions.matchers]]
-facetIds = ["firstparty.jwt-inspector.jwt"]
+facetIds = ["infiniti.jwt-inspector.jwt"]
 
 [[contributions]]
 id = "extract-jwt"
@@ -42,7 +42,7 @@ displayName = "Extract JWT JSON"
 exposeInMenu = false
 parameterSchema = { type = "object", properties = { part = { type = "string", enum = ["header", "payload"] } }, required = ["part"] }
 [[contributions.matchers]]
-facetIds = ["firstparty.jwt-inspector.jwt"]
+facetIds = ["infiniti.jwt-inspector.jwt"]
 
 [[contributions]]
 id = "copy-payload"
@@ -53,4 +53,4 @@ placements = ["action_menu"]
 effects = ["copy"]
 handler = { kind = "transformer_preset", transformerId = "extract-jwt", parameters = { part = "payload" }, disposition = "copy" }
 [[contributions.matchers]]
-facetIds = ["firstparty.jwt-inspector.jwt"]
+facetIds = ["infiniti.jwt-inspector.jwt"]

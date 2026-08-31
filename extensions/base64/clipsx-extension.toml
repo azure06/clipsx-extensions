@@ -1,6 +1,6 @@
 schemaVersion = 2
 contractRevision = 2
-packageId = "firstparty.base64"
+packageId = "infiniti.base64"
 version = "1.8.5"
 apiVersion = "^2.0"
 displayName = "Base64"
@@ -26,7 +26,7 @@ surfaces = ["detail", "compact"]
 inputLimitBytes = 10485760
 iconAssets = { light = "icons/binary-mark-light.svg", dark = "icons/binary-mark-dark.svg" }
 [[contributions.matchers]]
-facetIds = ["firstparty.base64.base64"]
+facetIds = ["infiniti.base64.base64"]
 
 [[contributions]]
 id = "base64-codec"
@@ -64,4 +64,4 @@ effects = ["preview", "copy", "save_as_clip"]
 inputLimitBytes = 10485760
 handler = { kind = "transformer_preset", transformerId = "base64-codec", parameters = { operation = "decode" }, disposition = "preview" }
 [[contributions.matchers]]
-facetIds = ["firstparty.base64.base64"]
+facetIds = ["infiniti.base64.base64"]

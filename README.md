@@ -11,6 +11,12 @@ Extensions are optional and none are installed with the application by default.
 | JWT Inspector | Unverified local JWT header and claim inspection |
 | Base64 | Local UTF-8/binary-aware Base64 encoding and decoding |
 | Data Tools | Tables, JSON/YAML/TOML, TypeScript shapes, and URL conversion |
+| Ask AI | Open selected text in ChatGPT or Claude with explicit navigation consent |
+
+Published package IDs use the permanent `infiniti.<package>` namespace.
+Contribution IDs remain package-local kebab-case identifiers; the host qualifies
+them as `<package-id>/<contribution-id>`, while emitted semantic facets use
+`<package-id>.<facet-id>`.
 
 ## Repository boundary
 

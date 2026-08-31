@@ -1,6 +1,6 @@
 schemaVersion = 2
 contractRevision = 2
-packageId = "firstparty.data-tools"
+packageId = "infiniti.data-tools"
 version = "1.1.0"
 apiVersion = "^2.0"
 displayName = "Data Tools"
@@ -148,7 +148,7 @@ placements = ["action_menu"]
 effects = ["preview", "copy", "save_as_clip"]
 handler = { kind = "transformer_preset", transformerId = "data-transform", parameters = { operation = "markdown-to-json" }, disposition = "preview" }
 [[contributions.matchers]]
-facetIds = ["firstparty.data-tools.markdown-table"]
+facetIds = ["infiniti.data-tools.markdown-table"]
 
 [[contributions]]
 id = "markdown-table-to-csv"
@@ -159,7 +159,7 @@ placements = ["action_menu"]
 effects = ["preview", "copy", "save_as_clip"]
 handler = { kind = "transformer_preset", transformerId = "data-transform", parameters = { operation = "markdown-to-csv" }, disposition = "preview" }
 [[contributions.matchers]]
-facetIds = ["firstparty.data-tools.markdown-table"]
+facetIds = ["infiniti.data-tools.markdown-table"]
 
 [[contributions]]
 id = "markdown-table-to-tsv"
@@ -170,7 +170,7 @@ placements = ["action_menu"]
 effects = ["preview", "copy", "save_as_clip"]
 handler = { kind = "transformer_preset", transformerId = "data-transform", parameters = { operation = "markdown-to-tsv" }, disposition = "preview" }
 [[contributions.matchers]]
-facetIds = ["firstparty.data-tools.markdown-table"]
+facetIds = ["infiniti.data-tools.markdown-table"]
 
 # Typed YAML/TOML inputs retain their MIME identity.
 [[contributions]]

@@ -1,0 +1,48 @@
+name: Extension packages
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  package:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        package: [ask-ai, base64, data-tools, jwt-inspector, mermaid-viewer]
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+      - name: Check out the pinned ClipsX package tool
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          repository: azure06/clipsx
+          path: clipsx-host
+          ref: b0b4b58b137e3a08a4ca86dc1727a495c7983ef2
+      - run: rustup target add wasm32-unknown-unknown
+      - run: npm ci
+      - name: Build, test, and prove deterministic packaging
+        env:
+          CLIPSX_REPO: ${{ github.workspace }}/clipsx-host
+        run: npm run package -- ${{ matrix.package }} dist/${{ matrix.package }}.clipsx
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: ${{ matrix.package }}
+          path: dist/${{ matrix.package }}.clipsx
+          if-no-files-found: error
+
+  repository-policy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+      - name: Enforce published identity policy
+        shell: bash
+        run: |
+          set -euo pipefail
+          ! grep -R -E 'firstparty\.|example\.ask-ai|communication-actions|Communication Actions' \
+            --exclude-dir=.git --exclude-dir=node_modules --exclude-dir=target .
+          test "$(find extensions -mindepth 1 -maxdepth 1 -type d | wc -l)" -eq 5

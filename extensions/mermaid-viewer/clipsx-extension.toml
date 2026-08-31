@@ -1,6 +1,6 @@
 schemaVersion = 2
 contractRevision = 2
-packageId = "firstparty.mermaid"
+packageId = "infiniti.mermaid"
 version = "1.0.0"
 apiVersion = "^2.0"
 displayName = "Mermaid"
@@ -40,7 +40,7 @@ uiEntry = "ui/index.html"
 uiSurfaces = ["detail", "dialog"]
 
 [[contributions.matchers]]
-facetIds = ["firstparty.mermaid.mermaid"]
+facetIds = ["infiniti.mermaid.mermaid"]
 
 [[contributions]]
 id = "markdown-mermaid-detail"
@@ -53,7 +53,7 @@ uiEntry = "ui/index.html"
 uiSurfaces = ["detail"]
 
 [[contributions.matchers]]
-facetIds = ["firstparty.mermaid.markdown-mermaid"]
+facetIds = ["infiniti.mermaid.markdown-mermaid"]
 
 [[contributions]]
 id = "open-mermaid-dialog"
@@ -67,4 +67,4 @@ uiSurfaces = ["dialog"]
 uiEntry = "ui/index.html"
 
 [[contributions.matchers]]
-facetIds = ["firstparty.mermaid.mermaid", "firstparty.mermaid.markdown-mermaid"]
+facetIds = ["infiniti.mermaid.mermaid", "infiniti.mermaid.markdown-mermaid"]

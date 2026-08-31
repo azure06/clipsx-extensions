@@ -1,6 +1,6 @@
 schemaVersion = 2
 contractRevision = 2
-packageId = "example.ask-ai"
+packageId = "infiniti.ask-ai"
 version = "1.0.3"
 apiVersion = "^2.0"
 displayName = "Ask AI"
