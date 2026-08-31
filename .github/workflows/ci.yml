@@ -23,6 +23,10 @@ jobs:
           repository: azure06/clipsx
           path: clipsx-host
           ref: b0b4b58b137e3a08a4ca86dc1727a495c7983ef2
+      - name: Install host validator dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libwebkit2gtk-4.1-dev libappindicator3-dev librsvg2-dev patchelf libxdo-dev
       - run: rustup target add wasm32-unknown-unknown
       - run: npm ci
       - name: Build, test, and prove deterministic packaging
