@@ -22,7 +22,7 @@ jobs:
         with:
           repository: azure06/clipsx
           path: clipsx-host
-          ref: b0b4b58b137e3a08a4ca86dc1727a495c7983ef2
+          ref: 2129af6868e1db3c81ae67956da83440abf4fd4a
       - name: Install host validator dependencies
         run: |
           sudo apt-get update
