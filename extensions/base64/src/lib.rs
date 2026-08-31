@@ -75,39 +75,35 @@ impl bindings::Guest for Base64 {
         let payload: Base64FacetPayload = serde_json::from_str(&facet.payload_json)
             .map_err(|_| invalid("Base64 metadata is invalid"))?;
         let decoded = decode_input(raw).ok_or_else(|| invalid("Base64 metadata is invalid"))?;
-        Ok(RenderModel::Card(CardModel {
-            leading: LeadingVisual::HostIcon("binary".into()),
-            title: "Base64".into(),
-            subtitle: Some(if payload.data_url {
-                "Data URL · encoded to decoded".into()
-            } else {
-                "Encoded to decoded".into()
-            }),
-            fields: vec![
-                CardField {
-                    label: "Encoded".into(),
-                    value: preview_value(raw),
-                },
-                CardField {
-                    label: "Decoded".into(),
-                    value: decoded_preview(&decoded),
-                },
-                CardField {
-                    label: "Details".into(),
-                    value: format!(
-                        "{} chars · {} decoded · {}{}",
-                        payload.encoded_chars,
-                        human_bytes(payload.decoded_bytes),
-                        payload.encoding,
-                        payload
-                            .mime_type
-                            .as_deref()
-                            .map(|mime| format!(" · {mime}"))
-                            .unwrap_or_default()
-                    ),
-                },
-            ],
-        }))
+        Ok(RenderModel::KeyValue(vec![
+            KeyValueEntry {
+                key: "Encoded".into(),
+                value: preview_value(raw),
+            },
+            KeyValueEntry {
+                key: "Decoded".into(),
+                value: decoded_preview(&decoded),
+            },
+            KeyValueEntry {
+                key: "Details".into(),
+                value: format!(
+                    "{} · {} chars · {} decoded · {}{}",
+                    if payload.data_url {
+                        "Data URL"
+                    } else {
+                        "Base64"
+                    },
+                    payload.encoded_chars,
+                    human_bytes(payload.decoded_bytes),
+                    payload.encoding,
+                    payload
+                        .mime_type
+                        .as_deref()
+                        .map(|mime| format!(" · {mime}"))
+                        .unwrap_or_default()
+                ),
+            },
+        ]))
     }
     fn render_compact(
         id: String,
@@ -619,12 +615,12 @@ mod tests {
         .unwrap();
         assert!(matches!(
             detail,
-            RenderModel::Card(card)
-                if card.title == "Base64"
-                    && card.fields.len() == 3
-                    && card.fields[0].label == "Encoded"
-                    && card.fields[0].value == *data_url
-                    && card.fields[1].label == "Decoded"
+            RenderModel::KeyValue(entries)
+                if entries.len() == 3
+                    && entries[0].key == "Encoded"
+                    && entries[0].value == *data_url
+                    && entries[1].key == "Decoded"
+                    && entries[2].value.contains("Data URL")
         ));
 
         let decoded = Base64::transform(

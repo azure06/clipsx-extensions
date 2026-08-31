@@ -8,7 +8,7 @@ declaration. Other binary results show their media type and size. Decoding
 restores UTF-8 text, explicit data-URL media types, or bounded generic binary
 bytes without reading copied file paths.
 
-The package owns Base64 recognition, its metadata card, and its codec. Detection
+The package owns Base64 recognition, its compact key/value summary, and its codec. Detection
 records only syntax-derived metadata such as decoded size and declared MIME
 type; decoded content is revealed only after the user runs Decode. The Actions
 menu shows exactly one relevant action and previews the result before changing
