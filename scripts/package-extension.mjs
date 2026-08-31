@@ -15,6 +15,7 @@ if (!supportedPackages.has(packageSlug) || !outputArgument) {
 
 const root = resolve(import.meta.dirname, '..')
 const packageRoot = resolve(root, 'extensions', packageSlug)
+const toolScript = resolve(root, 'scripts', 'clipsx-extension-tool.mjs')
 const manifestPath = resolve(packageRoot, 'clipsx-extension.toml')
 const cargoManifest = resolve(packageRoot, 'Cargo.toml')
 const output = resolve(root, outputArgument)
@@ -29,14 +30,16 @@ if (!packageId?.startsWith('infiniti.') || !version || !crateName) {
   throw new Error(`Invalid Infiniti package metadata in ${packageSlug}`)
 }
 
-const executable = command => (process.platform === 'win32' ? `${command}.cmd` : command)
+const executable = command => command
 const run = (command, args, options = {}) => {
   const result = spawnSync(executable(command), args, {
     cwd: root,
     env: process.env,
     encoding: 'utf8',
     stdio: options.capture ? 'pipe' : 'inherit',
+    shell: process.platform === 'win32' && command === 'npm',
   })
+  if (result.error) throw result.error
   if (result.status !== 0) {
     if (options.capture) process.stderr.write(result.stderr || result.stdout || '')
     process.exit(result.status ?? 1)
@@ -61,8 +64,8 @@ copyFileSync(
   resolve(packageRoot, 'component.wasm')
 )
 
-run('npm', ['run', 'tool', '--', 'pack', packageRoot, output])
-run('npm', ['run', 'tool', '--', 'pack', packageRoot, repeatOutput])
+run(process.execPath, [toolScript, 'pack', packageRoot, output])
+run(process.execPath, [toolScript, 'pack', packageRoot, repeatOutput])
 
 const digest = path => createHash('sha256').update(readFileSync(path)).digest('hex')
 if (digest(output) !== digest(repeatOutput)) {
@@ -71,11 +74,11 @@ if (digest(output) !== digest(repeatOutput)) {
 rmSync(repeatOutput)
 
 for (const command of ['validate', 'inspect', 'test']) {
-  run('npm', ['run', 'tool', '--', command, output])
+  run(process.execPath, [toolScript, command, output])
 }
 
 if (releaseUrl) {
-  const metadata = run('npm', ['run', 'tool', '--', 'registry-entry', output, releaseUrl], {
+  const metadata = run(process.execPath, [toolScript, 'registry-entry', output, releaseUrl], {
     capture: true,
   })
   const jsonStart = metadata.indexOf('{')
