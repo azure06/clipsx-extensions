@@ -23,12 +23,19 @@ them as `<package-id>/<contribution-id>`, while emitted semantic facets use
 - `extensions/` contains one independently versioned package per directory.
 - `sdk/wit/` is the pinned Extension API v2 contract used by the Rust guests.
 - Generated `target/`, `component.wasm`, `.clipsx`, and `dist/` outputs are ignored.
-- Published `.clipsx` archives belong in immutable GitHub Releases, not Git.
+- Published `.clipsx` archives belong in checksum-pinned GitHub Releases, not
+  Git; repository immutability is mandatory for every new release.
 - Catalog metadata and catalog icons belong in `azure06/clipsx-registry`.
 
 The package UI is fully local and offline. Runtime assets required by a package,
 including Mermaid and KaTeX WOFF2 fonts, are intentionally included in that
 package's release archive rather than the ClipsX application bundle.
+
+Release jobs require approval through the `extension-publishing` environment.
+They build a draft and attach every final asset before publication; GitHub locks
+the tag and assets when the draft is published. The initial five releases
+predate that repository setting and remain protected by their signed catalog
+checksums.
 
 ## Local development
 
