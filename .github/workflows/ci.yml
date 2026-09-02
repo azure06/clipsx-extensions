@@ -16,9 +16,9 @@ jobs:
       matrix:
         package: [ask-ai, base64, data-tools, jwt-inspector, mermaid-viewer]
     steps:
-      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+      - uses: actions/checkout@v4
       - name: Check out the pinned ClipsX package tool
-        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        uses: actions/checkout@v4
         with:
           repository: azure06/clipsx
           path: clipsx-host
@@ -33,7 +33,7 @@ jobs:
         env:
           CLIPSX_REPO: ${{ github.workspace }}/clipsx-host
         run: npm run package -- ${{ matrix.package }} dist/${{ matrix.package }}.clipsx
-      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+      - uses: actions/upload-artifact@v4
         with:
           name: ${{ matrix.package }}
           path: dist/${{ matrix.package }}.clipsx
@@ -42,7 +42,7 @@ jobs:
   repository-policy:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+      - uses: actions/checkout@v4
       - name: Enforce published identity policy
         shell: bash
         run: |

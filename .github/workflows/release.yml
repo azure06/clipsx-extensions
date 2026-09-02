@@ -8,26 +8,21 @@ on:
         required: true
         type: choice
         options: [ask-ai, base64, data-tools, jwt-inspector, mermaid-viewer]
-      version:
-        description: Exact manifest version
-        required: true
-        type: string
 
 permissions:
   contents: write
 
 concurrency:
-  group: extension-release-${{ inputs.package }}-${{ inputs.version }}
+  group: extension-release-${{ inputs.package }}
   cancel-in-progress: false
 
 jobs:
   release:
     runs-on: ubuntu-latest
-    environment: extension-publishing
     steps:
-      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+      - uses: actions/checkout@v4
       - name: Check out the pinned ClipsX package tool
-        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        uses: actions/checkout@v4
         with:
           repository: azure06/clipsx
           path: clipsx-host
@@ -39,36 +34,40 @@ jobs:
       - run: rustup target add wasm32-unknown-unknown
       - run: npm ci
       - name: Validate release identity
-        shell: bash
-        run: |
-          set -euo pipefail
-          manifest="extensions/${{ inputs.package }}/clipsx-extension.toml"
-          grep -Fxq "version = \"${{ inputs.version }}\"" "$manifest"
-          grep -Eq '^packageId = "infiniti\.[a-z0-9-]+"$' "$manifest"
-      - name: Build reviewed release assets
-        env:
-          CLIPSX_REPO: ${{ github.workspace }}/clipsx-host
-        run: |
-          package_id="$(sed -n 's/^packageId = "\([^"]*\)"/\1/p' "extensions/${{ inputs.package }}/clipsx-extension.toml")"
-          release_slug="${package_id#infiniti.}"
-          tag="${release_slug}-v${{ inputs.version }}"
-          asset="${release_slug}-${{ inputs.version }}.clipsx"
-          url="https://github.com/${{ github.repository }}/releases/download/${tag}/${asset}"
-          npm run package -- "${{ inputs.package }}" "dist/${asset}" "$url"
-      - name: Create immutable draft release
         env:
           GH_TOKEN: ${{ github.token }}
         shell: bash
         run: |
           set -euo pipefail
-          package_id="$(sed -n 's/^packageId = "\([^"]*\)"/\1/p' "extensions/${{ inputs.package }}/clipsx-extension.toml")"
+          test "$GITHUB_REF" = "refs/heads/main"
+          manifest="extensions/${{ inputs.package }}/clipsx-extension.toml"
+          grep -Eq '^packageId = "infiniti\.[a-z0-9-]+"$' "$manifest"
+          package_id="$(sed -n 's/^packageId = "\([^"]*\)"/\1/p' "$manifest")"
+          version="$(sed -n 's/^version = "\([^"]*\)"/\1/p' "$manifest")"
+          [[ "$version" =~ ^[0-9]+\.[0-9]+\.[0-9]+([+-][0-9A-Za-z.-]+)?$ ]]
           release_slug="${package_id#infiniti.}"
-          tag="${release_slug}-v${{ inputs.version }}"
-          asset="dist/${release_slug}-${{ inputs.version }}.clipsx"
-          metadata="dist/${release_slug}-${{ inputs.version }}.registry.json"
+          tag="${release_slug}-v${version}"
           ! gh release view "$tag" >/dev/null 2>&1
-          gh release create "$tag" "$asset" "$metadata" \
+          echo "PACKAGE_ID=$package_id" >> "$GITHUB_ENV"
+          echo "PACKAGE_VERSION=$version" >> "$GITHUB_ENV"
+          echo "RELEASE_SLUG=$release_slug" >> "$GITHUB_ENV"
+          echo "RELEASE_TAG=$tag" >> "$GITHUB_ENV"
+          echo "RELEASE_ASSET=${release_slug}-${version}.clipsx" >> "$GITHUB_ENV"
+      - name: Build reviewed release assets
+        env:
+          CLIPSX_REPO: ${{ github.workspace }}/clipsx-host
+        run: |
+          url="https://github.com/${{ github.repository }}/releases/download/${RELEASE_TAG}/${RELEASE_ASSET}"
+          npm run package -- "${{ inputs.package }}" "dist/${RELEASE_ASSET}" "$url"
+      - name: Publish immutable release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          gh release create "$RELEASE_TAG" \
+            "dist/${RELEASE_ASSET}" \
+            "dist/${RELEASE_SLUG}-${PACKAGE_VERSION}.registry.json" \
             --target "$GITHUB_SHA" \
-            --title "${{ inputs.package }} ${{ inputs.version }}" \
-            --notes "Reviewed Infiniti ClipsX extension release." \
-            --draft
+            --title "${{ inputs.package }} ${PACKAGE_VERSION}" \
+            --notes "Validated Infiniti ClipsX extension release."
