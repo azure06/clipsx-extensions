@@ -31,11 +31,17 @@ The package UI is fully local and offline. Runtime assets required by a package,
 including Mermaid and KaTeX WOFF2 fonts, are intentionally included in that
 package's release archive rather than the ClipsX application bundle.
 
-Release jobs require approval through the `extension-publishing` environment.
-They build a draft and attach every final asset before publication; GitHub locks
-the tag and assets when the draft is published. The initial five releases
-predate that repository setting and remain protected by their signed catalog
-checksums.
+Merging to `main` makes a package eligible for release but does not publish it.
+When a release is wanted, run **Publish extension release** and select the
+package. The workflow reads the version from that package's manifest, rebuilds
+and validates it, rejects an existing tag, and publishes the immutable release.
+The initial five releases predate repository immutability and remain protected
+by their signed catalog checksums.
+
+Publishing package bytes does not add them to the trusted catalog. Update the
+separate registry metadata through its normal pull request and signing flow only
+after reviewing the release. This keeps the everyday release operation simple
+without giving an extension-source workflow access to the catalog signing key.
 
 ## Local development
 
