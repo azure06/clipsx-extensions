@@ -201,7 +201,7 @@ impl bindings::Guest for Base64 {
             } else {
                 ActionState::Hidden
             }),
-            "encode-base64" => Ok(if recognized || !encodable {
+            "encode-base64" => Ok(if decodable || !encodable {
                 ActionState::Hidden
             } else if bytes(&input).is_some_and(|value| value.len() > MAX_ENCODE_INPUT_BYTES) {
                 ActionState::Disabled("Base64 encoding is limited to 7 MiB".into())
@@ -784,6 +784,11 @@ mod tests {
             Base64::action_state("decode-base64".into(), text_input("testtest"), None, "{}".into())
                 .unwrap(),
             ActionState::Enabled
+        ));
+        assert!(matches!(
+            Base64::action_state("encode-base64".into(), text_input("testtest"), None, "{}".into())
+                .unwrap(),
+            ActionState::Hidden
         ));
     }
 }
