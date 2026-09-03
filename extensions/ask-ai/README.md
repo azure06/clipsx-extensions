@@ -9,9 +9,10 @@ npm run extension:pack -- extensions/ask-ai dist/ask-ai.clipsx
 npm run extension:validate -- dist/ask-ai.clipsx
 ```
 
-The package opens only its declared ChatGPT and Claude origins. URL prompts are
-UTF-8 percent encoded and the WASM `action-state` export disables prompts that
-would exceed the host's URL limit.
+The package opens only its declared ChatGPT and Claude origins. Each action has
+a 2 KiB input ceiling matching the destination URL boundary. URL prompts are
+UTF-8 percent encoded and the WASM `action-state` export exits early and
+disables prompts whose encoded URL would exceed that boundary.
 
 The toolbar uses supplied provider marks: OpenAI Blossom black/white variants
 from the OpenAI logo bundle and Anthropic's rounded Claude icon from its media
