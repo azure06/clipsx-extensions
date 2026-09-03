@@ -10,7 +10,9 @@ bytes without reading copied file paths.
 
 The package owns Base64 recognition, its compact key/value summary, and its codec. Detection
 records only syntax-derived metadata such as decoded size and declared MIME
-type; decoded content is revealed only after the user runs Decode. The Actions
-menu shows exactly one relevant action and previews the result before changing
-the clipboard or history. Encoding is limited to 7 MiB so its Base64 output
-stays below the host's 10 MiB transform-result ceiling.
+type; decoded content is revealed only after the user runs Decode. Automatic
+recognition requires a data URL, canonical Base64 signals, printable UTF-8
+output, or a known image signature, so ordinary alphabet-only text is not
+hijacked. Decode remains available manually for every strictly decodable plain
+text value. Encoding is limited to 7 MiB so its Base64 output stays below the
+host's 10 MiB transform-result ceiling.

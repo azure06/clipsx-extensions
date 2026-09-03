@@ -1,7 +1,7 @@
 schemaVersion = 2
 contractRevision = 2
 packageId = "infiniti.base64"
-version = "1.8.5"
+version = "1.8.6"
 apiVersion = "^2.0"
 displayName = "Base64"
 description = "Encode captured text and binary data, and decode Base64 or MIME-preserving data URLs locally."
@@ -64,4 +64,4 @@ effects = ["preview", "copy", "save_as_clip"]
 inputLimitBytes = 10485760
 handler = { kind = "transformer_preset", transformerId = "base64-codec", parameters = { operation = "decode" }, disposition = "preview" }
 [[contributions.matchers]]
-facetIds = ["infiniti.base64.base64"]
+mimeTypes = ["text/plain"]

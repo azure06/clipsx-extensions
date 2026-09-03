@@ -187,24 +187,21 @@ impl bindings::Guest for Base64 {
     fn action_state(
         id: String,
         input: Representation,
-        _: Option<Facet>,
+        facet: Option<Facet>,
         _: String,
     ) -> Result<ActionState, GuestError> {
-        let decodable = text(&input)
-            .map(str::trim)
-            .and_then(analyze_input)
-            .is_some();
+        let recognized = facet
+            .as_ref()
+            .is_some_and(|facet| facet.id == "infiniti.base64.base64");
+        let decodable = recognized || text(&input).is_some_and(is_decodable);
         let encodable = bytes(&input).is_some();
-        // Only one of the two ever needs to be offered: this clip is either
-        // clearly decodable Base64, or it isn't — surface exactly the choice
-        // that applies instead of showing both and disabling one.
         match id.as_str() {
             "decode-base64" => Ok(if decodable {
                 ActionState::Enabled
             } else {
                 ActionState::Hidden
             }),
-            "encode-base64" => Ok(if decodable || !encodable {
+            "encode-base64" => Ok(if recognized || !encodable {
                 ActionState::Hidden
             } else if bytes(&input).is_some_and(|value| value.len() > MAX_ENCODE_INPUT_BYTES) {
                 ActionState::Disabled("Base64 encoding is limited to 7 MiB".into())
@@ -333,12 +330,11 @@ fn analyze_input(value: &str) -> Option<Base64Analysis> {
             .bytes()
             .any(|byte| matches!(byte, b'=' | b'+' | b'/' | b'-' | b'_'))
         || (payload.bytes().any(|byte| matches!(byte, b'\r' | b'\n')) && encoded_chars >= 32);
-    let has_mixed_classes = encoded_chars >= 7
-        && payload.bytes().any(|byte| byte.is_ascii_uppercase())
-        && payload.bytes().any(|byte| byte.is_ascii_lowercase())
-        && payload.bytes().any(|byte| byte.is_ascii_digit());
-    if !has_explicit_signal && !has_mixed_classes {
-        return None;
+    if !has_explicit_signal {
+        let decoded = decode(payload)?;
+        if !is_printable_utf8(&decoded) && sniff_raster_mime(&decoded).is_none() {
+            return None;
+        }
     }
     Some(Base64Analysis {
         decoded_bytes,
@@ -346,6 +342,35 @@ fn analyze_input(value: &str) -> Option<Base64Analysis> {
         mime_type,
         encoding,
         data_url,
+    })
+}
+
+fn is_decodable(value: &str) -> bool {
+    let value = value.trim();
+    let payload = if let Some(data_url) = value.strip_prefix("data:") {
+        let Some((metadata, payload)) = data_url.split_once(',') else {
+            return false;
+        };
+        if !metadata
+            .split(';')
+            .skip(1)
+            .any(|parameter| parameter.eq_ignore_ascii_case("base64"))
+        {
+            return false;
+        }
+        payload
+    } else {
+        value
+    };
+    analyze_payload(payload).is_some()
+}
+
+fn is_printable_utf8(value: &[u8]) -> bool {
+    std::str::from_utf8(value).is_ok_and(|text| {
+        !text.is_empty()
+            && text.chars().all(|character| {
+                !character.is_control() || matches!(character, '\n' | '\r' | '\t')
+            })
     })
 }
 
@@ -572,6 +597,22 @@ mod tests {
             .is_empty());
     }
 
+    #[test]
+    fn detector_accepts_unpadded_printable_text_and_known_binary() {
+        assert_eq!(
+            Base64::detect("detect-base64".into(), text_input("SGVsbG8"))
+                .unwrap()
+                .len(),
+            1
+        );
+        assert_eq!(
+            Base64::detect("detect-base64".into(), text_input("iVBORw0KGgo"))
+                .unwrap()
+                .len(),
+            1
+        );
+    }
+
     fn text_input(value: &str) -> Representation {
         Representation {
             format_key: "test:text/plain".into(),
@@ -701,7 +742,10 @@ mod tests {
             Base64::action_state(
                 "encode-base64".into(),
                 text_input("SGVsbG8="),
-                None,
+                Some(Facet {
+                    id: "infiniti.base64.base64".into(),
+                    payload_json: "{}".into(),
+                }),
                 "{}".into()
             )
             .unwrap(),
@@ -726,6 +770,19 @@ mod tests {
                 "{}".into()
             )
             .unwrap(),
+            ActionState::Enabled
+        ));
+    }
+
+
+    #[test]
+    fn ambiguous_but_valid_base64_remains_manually_decodable() {
+        assert!(Base64::detect("detect-base64".into(), text_input("testtest"))
+            .unwrap()
+            .is_empty());
+        assert!(matches!(
+            Base64::action_state("decode-base64".into(), text_input("testtest"), None, "{}".into())
+                .unwrap(),
             ActionState::Enabled
         ));
     }
