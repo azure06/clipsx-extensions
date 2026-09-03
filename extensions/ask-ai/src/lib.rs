@@ -73,7 +73,7 @@ impl bindings::Guest for AskAi {
             "ask-claude" => "https://claude.ai/new?q=",
             _ => return Ok(ActionState::Hidden),
         };
-        if base.len() + encoded_len(text) > 2048 {
+        if encoded_len_exceeds(text, 2048 - base.len()) {
             Ok(ActionState::Disabled(
                 "The selected text is too long for this destination URL".into(),
             ))
@@ -96,6 +96,17 @@ fn encoded_len(value: &str) -> usize {
         .iter()
         .map(|byte| if unreserved(*byte) { 1 } else { 3 })
         .sum()
+}
+
+fn encoded_len_exceeds(value: &str, maximum: usize) -> bool {
+    let mut length = 0usize;
+    for byte in value.bytes() {
+        length = length.saturating_add(if unreserved(byte) { 1 } else { 3 });
+        if length > maximum {
+            return true;
+        }
+    }
+    false
 }
 
 fn encode_query(value: &str) -> String {
@@ -144,5 +155,12 @@ mod tests {
     fn encoded_length_matches_output() {
         let input = "emoji 🦀 & ?";
         assert_eq!(encoded_len(input), encode_query(input).len());
+    }
+
+    #[test]
+    fn encoded_length_limit_stops_at_the_destination_boundary() {
+        assert!(!encoded_len_exceeds("short prompt", 100));
+        assert!(encoded_len_exceeds(&"x".repeat(2049), 2048));
+        assert!(encoded_len_exceeds("東京", 17));
     }
 }

@@ -1,7 +1,7 @@
 schemaVersion = 2
 contractRevision = 2
 packageId = "infiniti.ask-ai"
-version = "1.0.3"
+version = "1.0.4"
 apiVersion = "^2.0"
 displayName = "Ask AI"
 description = "Open selected text as an encoded prompt in ChatGPT or Claude."
@@ -16,6 +16,7 @@ iconAssets = { light = "icons/chatgpt-black.svg", dark = "icons/chatgpt-white.sv
 iconScale = 1.85
 placements = ["preview_toolbar", "action_menu"]
 effects = ["open_https_url"]
+inputLimitBytes = 2048
 handler = { kind = "guest" }
 
 [[contributions.matchers]]
@@ -28,6 +29,7 @@ displayName = "Ask Claude"
 iconAssets = { light = "icons/claude-rounded.svg", dark = "icons/claude-rounded.svg" }
 placements = ["preview_toolbar", "action_menu"]
 effects = ["open_https_url"]
+inputLimitBytes = 2048
 handler = { kind = "guest" }
 
 [[contributions.matchers]]
