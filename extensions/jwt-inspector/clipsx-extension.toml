@@ -1,7 +1,7 @@
 schemaVersion = 2
 contractRevision = 2
 packageId = "infiniti.jwt-inspector"
-version = "1.2.1"
+version = "1.2.2"
 apiVersion = "^2.0"
 displayName = "JWT Inspector"
 description = "Inspect JWT headers, claims, and timestamps locally without implying signature verification."
@@ -13,6 +13,7 @@ id = "show-raw"
 label = "Show raw JSON by default"
 kind = "boolean"
 default = false
+portable = true
 
 [[contributions]]
 id = "detect-jwt"

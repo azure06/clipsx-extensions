@@ -1,7 +1,7 @@
 schemaVersion = 2
 contractRevision = 2
 packageId = "infiniti.mermaid"
-version = "1.0.0"
+version = "1.0.1"
 apiVersion = "^2.0"
 displayName = "Mermaid"
 description = "Fast, offline Mermaid diagrams and enhanced Markdown rendering."
@@ -13,12 +13,14 @@ id = "show-source"
 label = "Show diagram source by default"
 kind = "boolean"
 default = false
+portable = true
 
 [[settings]]
 id = "fit-diagram"
 label = "Fit diagrams to the available width"
 kind = "boolean"
 default = true
+portable = true
 
 [[contributions]]
 id = "detect-mermaid"
