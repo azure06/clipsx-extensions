@@ -1,8 +1,8 @@
-schemaVersion = 2
-contractRevision = 2
+schemaVersion = 3
+contractRevision = 1
 packageId = "infiniti.base64"
-version = "1.8.7"
-apiVersion = "^2.0"
+version = "1.8.8"
+apiVersion = "^3.0"
 displayName = "Base64"
 description = "Encode captured text and binary data, and decode Base64 or MIME-preserving data URLs locally."
 license = "MIT"

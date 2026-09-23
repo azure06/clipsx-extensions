@@ -121,9 +121,13 @@ impl bindings::Guest for Base64 {
             accessibility_label: "Base64 encoded data".into(),
         })
     }
+    fn prepare_transform(_: String, _: Representation, _: String, parameters: String) -> Result<PrepareDecision, GuestError> {
+        Ok(PrepareDecision::Run(parameters))
+    }
     fn transform(
         id: String,
         input: Representation,
+        _: String,
         parameters: String,
     ) -> Result<Vec<OutputRepresentation>, GuestError> {
         if id != "base64-codec" {
@@ -637,6 +641,7 @@ mod tests {
         let encoded = Base64::transform(
             "base64-codec".into(),
             binary_input(&png_header, "image/png"),
+            "{}".into(),
             serde_json::json!({ "operation": "encode" }).to_string(),
         )
         .unwrap();
@@ -667,6 +672,7 @@ mod tests {
         let decoded = Base64::transform(
             "base64-codec".into(),
             text_input(data_url),
+            "{}".into(),
             serde_json::json!({ "operation": "decode" }).to_string(),
         )
         .unwrap();
@@ -680,6 +686,7 @@ mod tests {
         let decoded = Base64::transform(
             "base64-codec".into(),
             text_input(&raw),
+            "{}".into(),
             serde_json::json!({ "operation": "decode" }).to_string(),
         )
         .unwrap();

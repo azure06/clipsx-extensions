@@ -3,12 +3,12 @@ import { createHash } from 'node:crypto'
 import { basename, resolve } from 'node:path'
 import { spawnSync } from 'node:child_process'
 
-const supportedPackages = new Set(['ask-ai', 'base64', 'data-tools', 'jwt-inspector', 'mermaid-viewer'])
+const supportedPackages = new Set(['ask-ai', 'base64', 'data-tools', 'jwt-inspector', 'mermaid-viewer', 'rewrite'])
 const [packageSlug, outputArgument, releaseUrl] = process.argv.slice(2)
 
 if (!supportedPackages.has(packageSlug) || !outputArgument) {
   console.error(
-    'Usage: npm run package -- <ask-ai|base64|data-tools|jwt-inspector|mermaid-viewer> <output.clipsx> [release-url]'
+    'Usage: npm run package -- <ask-ai|base64|data-tools|jwt-inspector|mermaid-viewer|rewrite> <output.clipsx> [release-url]'
   )
   process.exit(2)
 }
