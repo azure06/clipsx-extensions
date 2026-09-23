@@ -50,9 +50,13 @@ impl bindings::Guest for JwtInspector {
             "JWT Inspector does not replace history previews",
         ))
     }
+    fn prepare_transform(_: String, _: Representation, _: String, parameters: String) -> Result<PrepareDecision, GuestError> {
+        Ok(PrepareDecision::Run(parameters))
+    }
     fn transform(
         id: String,
         input: Representation,
+        _: String,
         parameters: String,
     ) -> Result<Vec<OutputRepresentation>, GuestError> {
         if id != "extract-jwt" {
@@ -194,6 +198,7 @@ mod tests {
         let outputs = JwtInspector::transform(
             "extract-jwt".into(),
             input,
+            "{}".into(),
             serde_json::json!({"part":"payload"}).to_string(),
         )
         .unwrap();

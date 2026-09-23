@@ -6,7 +6,7 @@ mod bindings {
 
 use bindings::clipsx::extension::types::{
     ActionResult, ActionState, CompactModel, Content, Facet, GuestError, GuestErrorCode,
-    OutputRepresentation, RenderModel, Representation,
+    OutputRepresentation, PrepareDecision, RenderModel, Representation,
 };
 
 struct MermaidViewer;
@@ -51,9 +51,13 @@ impl bindings::Guest for MermaidViewer {
     ) -> Result<CompactModel, GuestError> {
         Err(unsupported("Mermaid uses the host compact summary"))
     }
+    fn prepare_transform(_: String, _: Representation, _: String, parameters: String) -> Result<PrepareDecision, GuestError> {
+        Ok(PrepareDecision::Run(parameters))
+    }
     fn transform(
         _: String,
         _: Representation,
+        _: String,
         _: String,
     ) -> Result<Vec<OutputRepresentation>, GuestError> {
         Err(unsupported("Mermaid Viewer has no transformer"))

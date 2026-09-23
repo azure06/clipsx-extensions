@@ -44,9 +44,13 @@ impl bindings::Guest for DataTools {
     ) -> Result<CompactModel, GuestError> {
         Err(unsupported("Data Tools has no compact renderer"))
     }
+    fn prepare_transform(_: String, _: Representation, _: String, parameters: String) -> Result<PrepareDecision, GuestError> {
+        Ok(PrepareDecision::Run(parameters))
+    }
     fn transform(
         id: String,
         input: Representation,
+        _: String,
         params: String,
     ) -> Result<Vec<OutputRepresentation>, GuestError> {
         if id != "data-transform" {

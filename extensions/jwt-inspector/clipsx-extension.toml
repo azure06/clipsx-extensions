@@ -1,8 +1,8 @@
-schemaVersion = 2
-contractRevision = 2
+schemaVersion = 3
+contractRevision = 1
 packageId = "infiniti.jwt-inspector"
-version = "1.2.2"
-apiVersion = "^2.0"
+version = "1.2.3"
+apiVersion = "^3.0"
 displayName = "JWT Inspector"
 description = "Inspect JWT headers, claims, and timestamps locally without implying signature verification."
 license = "MIT"

@@ -12,6 +12,7 @@ Extensions are optional and none are installed with the application by default.
 | Base64 | Local UTF-8/binary-aware Base64 encoding and decoding |
 | Data Tools | Tables, JSON/YAML/TOML, TypeScript shapes, and URL conversion |
 | Ask AI | Open selected text in ChatGPT or Claude with explicit navigation consent |
+| Rewrite | Local-model rewriting with presets and durable per-clip results |
 
 Published package IDs use the permanent `infiniti.<package>` namespace.
 Contribution IDs remain package-local kebab-case identifiers; the host qualifies
@@ -21,7 +22,7 @@ them as `<package-id>/<contribution-id>`, while emitted semantic facets use
 ## Repository boundary
 
 - `extensions/` contains one independently versioned package per directory.
-- `sdk/wit/` is the pinned Extension API v2 contract used by the Rust guests.
+- `sdk/wit/` is the pinned Extension API v3 contract used by the Rust guests.
 - Generated `target/`, `component.wasm`, `.clipsx`, and `dist/` outputs are ignored.
 - Published `.clipsx` archives belong in checksum-pinned GitHub Releases, not
   Git; repository immutability is mandatory for every new release.
@@ -35,8 +36,7 @@ Merging to `main` makes a package eligible for release but does not publish it.
 When a release is wanted, run **Publish extension release** and select the
 package. The workflow reads the version from that package's manifest, rebuilds
 and validates it, rejects an existing tag, and publishes the immutable release.
-The initial five releases predate repository immutability and remain protected
-by their signed catalog checksums.
+The v3 package versions use new immutable tags and archive assets.
 
 Publishing package bytes does not add them to the trusted catalog. Update the
 separate registry metadata through its normal pull request and signing flow only

@@ -1,0 +1,100 @@
+schemaVersion = 3
+contractRevision = 1
+packageId = "infiniti.rewrite"
+version = "1.0.0"
+apiVersion = "^3.0"
+displayName = "Rewrite"
+description = "Rewrite copied text with the configured local generation model."
+license = "Apache-2.0"
+
+[permissions]
+providers = ["generation.text"]
+selectedInput = true
+backgroundClipCreated = true
+sourceApplication = true
+packageState = false
+
+[[contributions]]
+id = "rewrite"
+kind = "transformer"
+displayName = "Rewrite"
+execution = "capability_backed"
+resultLifetime = "source_clip"
+parameterSchema = { type = "object", properties = { preset = { type = "string", enum = ["business", "casual", "concise", "improve_writing", "translate", "custom"] }, target_language = { type = "string", maxLength = 64 }, custom_instruction = { type = "string", maxLength = 4096 } }, required = ["preset"] }
+[[contributions.matchers]]
+mimeTypes = ["text/plain"]
+
+[[contributions]]
+id = "business"
+kind = "action"
+execution = "capability_backed"
+displayName = "Business"
+placements = ["preview_toolbar", "action_menu"]
+effects = ["preview", "copy", "save_as_clip"]
+handler = { kind = "transformer_preset", transformerId = "rewrite", parameters = { preset = "business" }, disposition = "preview" }
+[[contributions.matchers]]
+mimeTypes = ["text/plain"]
+
+[[contributions]]
+id = "casual"
+kind = "action"
+execution = "capability_backed"
+displayName = "Casual"
+placements = ["action_menu"]
+effects = ["preview", "copy", "save_as_clip"]
+handler = { kind = "transformer_preset", transformerId = "rewrite", parameters = { preset = "casual" }, disposition = "preview" }
+[[contributions.matchers]]
+mimeTypes = ["text/plain"]
+
+[[contributions]]
+id = "concise"
+kind = "action"
+execution = "capability_backed"
+displayName = "Concise"
+placements = ["action_menu"]
+effects = ["preview", "copy", "save_as_clip"]
+handler = { kind = "transformer_preset", transformerId = "rewrite", parameters = { preset = "concise" }, disposition = "preview" }
+[[contributions.matchers]]
+mimeTypes = ["text/plain"]
+
+[[contributions]]
+id = "improve-writing"
+kind = "action"
+execution = "capability_backed"
+displayName = "Improve writing"
+placements = ["action_menu"]
+effects = ["preview", "copy", "save_as_clip"]
+handler = { kind = "transformer_preset", transformerId = "rewrite", parameters = { preset = "improve_writing" }, disposition = "preview" }
+[[contributions.matchers]]
+mimeTypes = ["text/plain"]
+
+[[contributions]]
+id = "translate"
+kind = "action"
+execution = "capability_backed"
+displayName = "Translate"
+placements = ["action_menu"]
+effects = ["preview", "copy", "save_as_clip"]
+parameterSchema = { type = "object", properties = { target_language = { type = "string", maxLength = 64 } }, required = ["target_language"] }
+handler = { kind = "transformer_preset", transformerId = "rewrite", parameters = { preset = "translate" }, disposition = "preview" }
+[[contributions.matchers]]
+mimeTypes = ["text/plain"]
+
+[[contributions]]
+id = "custom"
+kind = "action"
+execution = "capability_backed"
+displayName = "Custom rewrite"
+placements = ["action_menu"]
+effects = ["preview", "copy", "save_as_clip"]
+parameterSchema = { type = "object", properties = { custom_instruction = { type = "string", maxLength = 4096 } }, required = ["custom_instruction"] }
+handler = { kind = "transformer_preset", transformerId = "rewrite", parameters = { preset = "custom" }, disposition = "preview" }
+[[contributions.matchers]]
+mimeTypes = ["text/plain"]
+
+[[activations]]
+id = "rewrite-on-capture"
+event = "clip_created"
+transformerId = "rewrite"
+[[activations.matchers]]
+mimeTypes = ["text/plain"]

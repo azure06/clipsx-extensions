@@ -1,8 +1,8 @@
-schemaVersion = 2
-contractRevision = 2
+schemaVersion = 3
+contractRevision = 1
 packageId = "infiniti.mermaid"
-version = "1.0.1"
-apiVersion = "^2.0"
+version = "1.0.2"
+apiVersion = "^3.0"
 displayName = "Mermaid"
 description = "Fast, offline Mermaid diagrams and enhanced Markdown rendering."
 license = "MIT"

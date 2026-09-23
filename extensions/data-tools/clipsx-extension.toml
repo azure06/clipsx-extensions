@@ -1,8 +1,8 @@
-schemaVersion = 2
-contractRevision = 2
+schemaVersion = 3
+contractRevision = 1
 packageId = "infiniti.data-tools"
-version = "1.1.0"
-apiVersion = "^2.0"
+version = "1.1.1"
+apiVersion = "^3.0"
 displayName = "Data Tools"
 description = "Convert tables, structured data, TypeScript shapes, and URLs locally."
 license = "MIT"

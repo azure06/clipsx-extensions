@@ -14,7 +14,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        package: [ask-ai, base64, data-tools, jwt-inspector, mermaid-viewer]
+        package: [ask-ai, base64, data-tools, jwt-inspector, mermaid-viewer, rewrite]
     steps:
       - uses: actions/checkout@v4
       - name: Check out the pinned ClipsX package tool
@@ -22,7 +22,7 @@ jobs:
         with:
           repository: azure06/clipsx
           path: clipsx-host
-          ref: ${{ vars.CLIPSX_EXTENSION_TOOL_REF || '953850ef6b13651d4cce31ca0f4b114f4386fc6c' }}
+          ref: ${{ vars.CLIPSX_EXTENSION_TOOL_REF || 'develop' }}
       - name: Install host validator dependencies
         run: |
           sudo apt-get update
@@ -49,4 +49,4 @@ jobs:
           set -euo pipefail
           ! grep -R -E 'firstparty\.|example\.ask-ai|communication-actions|Communication Actions' \
             --exclude-dir=.git --exclude-dir=node_modules --exclude-dir=target .
-          test "$(find extensions -mindepth 1 -maxdepth 1 -type d | wc -l)" -eq 5
+          test "$(find extensions -mindepth 1 -maxdepth 1 -type d | wc -l)" -eq 6
