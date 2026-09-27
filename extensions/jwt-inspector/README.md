@@ -8,3 +8,5 @@ Safely decodes JWT headers and payload claims into a compact ClipsX view. This e
 - Human-readable `exp`, `iat`, and `nbf` timestamps
 
 Signature verification is intentionally out of scope.
+
+Tools offers JWT payload and JWT header setups for valid tokens. Extraction creates a saved, clip-owned JSON result with Result and Compare views.

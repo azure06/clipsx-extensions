@@ -1,13 +1,11 @@
+#[allow(clippy::too_many_arguments)]
 mod bindings {
     use super::AskAi;
     wit_bindgen::generate!({ path: "../../sdk/wit", world: "extension" });
     export!(AskAi);
 }
 
-use bindings::clipsx::extension::types::{
-    ActionResult, ActionState, CompactModel, Content, Facet, GuestError, GuestErrorCode,
-    OutputRepresentation, PrepareDecision, RenderModel, Representation,
-};
+use bindings::clipsx::extension::types::*;
 
 struct AskAi;
 
@@ -32,16 +30,23 @@ impl bindings::Guest for AskAi {
         Err(unsupported("Ask AI has no compact renderer"))
     }
 
-    fn prepare_transform(_: String, _: Representation, _: String, parameters: String) -> Result<PrepareDecision, GuestError> {
-        Ok(PrepareDecision::Run(parameters))
-    }
-    fn transform(
+    fn assess(
         _: String,
         _: Representation,
         _: String,
         _: String,
-    ) -> Result<Vec<OutputRepresentation>, GuestError> {
-        Err(unsupported("Ask AI has no transformer"))
+    ) -> Result<OperationAvailability, GuestError> {
+        Ok(OperationAvailability::Hidden)
+    }
+    fn advance(
+        _: String,
+        _: Representation,
+        _: String,
+        _: String,
+        _: String,
+        _: Option<String>,
+    ) -> Result<OperationProgress, GuestError> {
+        Err(unsupported("Ask AI has no transformation operation"))
     }
 
     fn run_action(
@@ -149,10 +154,14 @@ fn unsupported(message: &str) -> GuestError {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use bindings::Guest;
 
     #[test]
     fn query_encoding_is_utf8_and_reserved_safe() {
-        assert_eq!(encode_query("hello world? 東京"), "hello%20world%3F%20%E6%9D%B1%E4%BA%AC");
+        assert_eq!(
+            encode_query("hello world? 東京"),
+            "hello%20world%3F%20%E6%9D%B1%E4%BA%AC"
+        );
     }
 
     #[test]
@@ -166,5 +175,40 @@ mod tests {
         assert!(!encoded_len_exceeds("short prompt", 100));
         assert!(encoded_len_exceeds(&"x".repeat(2049), 2048));
         assert!(encoded_len_exceeds("東京", 17));
+    }
+    fn input(value: &str) -> Representation {
+        Representation {
+            format_key: "mime:text/plain".into(),
+            mime_type: Some("text/plain".into()),
+            storage_kind: "text".into(),
+            content: Content::Text(value.into()),
+        }
+    }
+    #[test]
+    fn browser_actions_keep_their_destinations_and_availability() {
+        for (id, origin) in [
+            ("ask-chatgpt", "https://chatgpt.com/?q="),
+            ("ask-claude", "https://claude.ai/new?q="),
+        ] {
+            assert!(matches!(
+                AskAi::action_state(id.into(), input("hello world"), None, "{}".into()).unwrap(),
+                ActionState::Enabled
+            ));
+            let ActionResult::OpenHttpsUrl(url) =
+                AskAi::run_action(id.into(), input("hello world"), None, "{}".into()).unwrap()
+            else {
+                panic!("Expected browser navigation")
+            };
+            assert_eq!(url, format!("{origin}hello%20world"));
+            assert!(matches!(
+                AskAi::action_state(id.into(), input(&"東京".repeat(200)), None, "{}".into())
+                    .unwrap(),
+                ActionState::Disabled(_)
+            ));
+        }
+        assert!(matches!(
+            AskAi::action_state("unknown".into(), input("hello"), None, "{}".into()).unwrap(),
+            ActionState::Hidden
+        ));
     }
 }

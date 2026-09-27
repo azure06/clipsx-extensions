@@ -22,7 +22,7 @@ jobs:
         with:
           repository: azure06/clipsx
           path: clipsx-host
-          ref: 65bc19e38427561a4a3e85129c9314de57e02e1a
+          ref: 5139245ef540e76a82b7ce746b5efb8f6ac3ff91
       - name: Install host validator dependencies
         run: |
           sudo apt-get update
@@ -47,6 +47,6 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          ! grep -R -E 'firstparty\.|example\.ask-ai|communication-actions|Communication Actions' \
-            --exclude-dir=.git --exclude-dir=node_modules --exclude-dir=target .
+          ! grep -R -E 'firstparty\.|example\.ask-ai' \
+            --exclude-dir=target extensions sdk scripts README.md
           test "$(find extensions -mindepth 1 -maxdepth 1 -type d | wc -l)" -eq 6

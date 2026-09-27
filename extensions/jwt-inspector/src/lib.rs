@@ -1,3 +1,4 @@
+#[allow(clippy::too_many_arguments)]
 mod bindings {
     use super::JwtInspector;
     wit_bindgen::generate!({ path: "../../sdk/wit", world: "extension" });
@@ -50,10 +51,67 @@ impl bindings::Guest for JwtInspector {
             "JWT Inspector does not replace history previews",
         ))
     }
-    fn prepare_transform(_: String, _: Representation, _: String, parameters: String) -> Result<PrepareDecision, GuestError> {
-        Ok(PrepareDecision::Run(parameters))
+    fn assess(
+        id: String,
+        input: Representation,
+        _: String,
+        parameters: String,
+    ) -> Result<OperationAvailability, GuestError> {
+        if id != "extract-jwt" {
+            return Err(unsupported("unknown operation"));
+        }
+        let params: serde_json::Value =
+            serde_json::from_str(&parameters).map_err(|_| invalid("invalid parameters"))?;
+        let valid_part = matches!(
+            params.get("part").and_then(|value| value.as_str()),
+            Some("header" | "payload")
+        );
+        Ok(
+            if valid_part && decode_token(text(&input).unwrap_or_default().trim()).is_some() {
+                OperationAvailability::Ready
+            } else {
+                OperationAvailability::Hidden
+            },
+        )
     }
-    fn transform(
+    fn advance(
+        id: String,
+        input: Representation,
+        context: String,
+        parameters: String,
+        _: String,
+        _: Option<String>,
+    ) -> Result<OperationProgress, GuestError> {
+        let outputs = Self::convert(id, input, context, parameters)?;
+        Ok(OperationProgress::Complete(OperationComplete {
+            outputs,
+            view_json: Some(serde_json::json!({"tabs":[
+                {"id":"result","label":"Result","layout":"single","panels":[{"source":"output","outputId":"extracted"}]},
+                {"id":"compare","label":"Compare","layout":"split","panels":[{"source":"input"},{"source":"output","outputId":"extracted"}]}
+            ]}).to_string()),
+            state_writes_json: None,
+        }))
+    }
+    fn run_action(
+        _: String,
+        _: Representation,
+        _: Option<Facet>,
+        _: String,
+    ) -> Result<ActionResult, GuestError> {
+        Err(unsupported("Run JWT extraction from Tools"))
+    }
+    fn action_state(
+        _: String,
+        _: Representation,
+        _: Option<Facet>,
+        _: String,
+    ) -> Result<ActionState, GuestError> {
+        Ok(ActionState::Hidden)
+    }
+}
+
+impl JwtInspector {
+    fn convert(
         id: String,
         input: Representation,
         _: String,
@@ -72,22 +130,6 @@ impl bindings::Guest for JwtInspector {
             _ => return Err(invalid("part must be header or payload")),
         };
         output(serde_json::to_string_pretty(&value).map_err(|_| failed("could not serialize JWT"))?)
-    }
-    fn run_action(
-        _: String,
-        _: Representation,
-        _: Option<Facet>,
-        _: String,
-    ) -> Result<ActionResult, GuestError> {
-        Err(unsupported("actions use transformer presets"))
-    }
-    fn action_state(
-        _: String,
-        _: Representation,
-        _: Option<Facet>,
-        _: String,
-    ) -> Result<ActionState, GuestError> {
-        Ok(ActionState::Enabled)
     }
 }
 
@@ -146,6 +188,7 @@ fn decode64(input: &[u8], url: bool) -> Option<Vec<u8>> {
 }
 fn output(value: String) -> Result<Vec<OutputRepresentation>, GuestError> {
     Ok(vec![OutputRepresentation {
+        id: "extracted".into(),
         format_key: "mime:application/json".into(),
         mime_type: "application/json".into(),
         content: OutputContent::Text(value),
@@ -195,7 +238,7 @@ mod tests {
                     .into(),
             ),
         };
-        let outputs = JwtInspector::transform(
+        let outputs = JwtInspector::convert(
             "extract-jwt".into(),
             input,
             "{}".into(),
@@ -210,5 +253,49 @@ mod tests {
             &outputs[0].content,
             OutputContent::Text(value) if value == "{\n  \"admin\": true,\n  \"sub\": \"123\"\n}"
         ));
+    }
+    #[test]
+    fn current_contract_assesses_input_and_completes_named_outputs() {
+        let input = |value: &str| Representation {
+            format_key: "mime:text/plain".into(),
+            mime_type: Some("text/plain".into()),
+            storage_kind: "text".into(),
+            content: Content::Text(value.into()),
+        };
+        let parameters = serde_json::json!({"part":"payload"}).to_string();
+        assert!(matches!(
+            JwtInspector::assess(
+                "extract-jwt".into(),
+                input("ordinary text"),
+                "{}".into(),
+                parameters.clone()
+            )
+            .unwrap(),
+            OperationAvailability::Hidden
+        ));
+        assert!(matches!(
+            JwtInspector::assess(
+                "extract-jwt".into(),
+                input(r#"eyJhbGciOiJub25lIiwidHlwIjoiSldUIn0.eyJzdWIiOiIxMjMifQ.signature"#),
+                "{}".into(),
+                parameters.clone()
+            )
+            .unwrap(),
+            OperationAvailability::Ready
+        ));
+        let OperationProgress::Complete(result) = JwtInspector::advance(
+            "extract-jwt".into(),
+            input(r#"eyJhbGciOiJub25lIiwidHlwIjoiSldUIn0.eyJzdWIiOiIxMjMifQ.signature"#),
+            "{}".into(),
+            parameters,
+            "{}".into(),
+            None,
+        )
+        .unwrap() else {
+            panic!("expected completion")
+        };
+        assert_eq!(result.outputs.len(), 1);
+        assert!(!result.outputs[0].id.is_empty());
+        assert!(result.view_json.unwrap().contains(&result.outputs[0].id));
     }
 }

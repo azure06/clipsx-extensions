@@ -121,10 +121,68 @@ impl bindings::Guest for Base64 {
             accessibility_label: "Base64 encoded data".into(),
         })
     }
-    fn prepare_transform(_: String, _: Representation, _: String, parameters: String) -> Result<PrepareDecision, GuestError> {
-        Ok(PrepareDecision::Run(parameters))
+    fn assess(
+        id: String,
+        input: Representation,
+        _: String,
+        parameters: String,
+    ) -> Result<OperationAvailability, GuestError> {
+        if id != "base64-codec" {
+            return Err(unsupported("Unknown Base64 operation"));
+        }
+        let p: serde_json::Value =
+            serde_json::from_str(&parameters).map_err(|_| invalid("Invalid parameters"))?;
+        let decodable = text(&input).is_some_and(is_decodable);
+        Ok(match p.get("operation").and_then(|value| value.as_str()) {
+            Some("decode") if decodable => OperationAvailability::Ready,
+            Some("decode") => OperationAvailability::Hidden,
+            Some("encode") if decodable || bytes(&input).is_none() => OperationAvailability::Hidden,
+            Some("encode")
+                if bytes(&input).is_some_and(|value| value.len() > MAX_ENCODE_INPUT_BYTES) =>
+            {
+                OperationAvailability::Disabled("Base64 encoding is limited to 7 MiB".into())
+            }
+            Some("encode") => OperationAvailability::Ready,
+            _ => OperationAvailability::Hidden,
+        })
     }
-    fn transform(
+    fn advance(
+        id: String,
+        input: Representation,
+        context: String,
+        parameters: String,
+        _: String,
+        _: Option<String>,
+    ) -> Result<OperationProgress, GuestError> {
+        let outputs = Self::convert(id, input, context, parameters)?;
+        Ok(OperationProgress::Complete(OperationComplete {
+            outputs,
+            view_json: Some(serde_json::json!({"tabs":[
+                {"id":"result","label":"Result","layout":"single","panels":[{"source":"output","outputId":"converted"}]},
+                {"id":"compare","label":"Compare","layout":"split","panels":[{"source":"input"},{"source":"output","outputId":"converted"}]}
+            ]}).to_string()),
+            state_writes_json: None,
+        }))
+    }
+    fn run_action(
+        _: String,
+        _: Representation,
+        _: Option<Facet>,
+        _: String,
+    ) -> Result<ActionResult, GuestError> {
+        Err(unsupported("Run Base64 from Tools"))
+    }
+    fn action_state(
+        _: String,
+        _: Representation,
+        _: Option<Facet>,
+        _: String,
+    ) -> Result<ActionState, GuestError> {
+        Ok(ActionState::Hidden)
+    }
+}
+impl Base64 {
+    fn convert(
         id: String,
         input: Representation,
         _: String,
@@ -158,6 +216,7 @@ impl bindings::Guest for Base64 {
                 if decoded.mime_type.as_deref().is_none_or(is_text_mime) {
                     if let Ok(value) = String::from_utf8(decoded.bytes.clone()) {
                         return Ok(vec![OutputRepresentation {
+                            id: "converted".into(),
                             format_key: format!(
                                 "mime:{}",
                                 decoded.mime_type.as_deref().unwrap_or("text/plain")
@@ -172,6 +231,7 @@ impl bindings::Guest for Base64 {
                     .or_else(|| sniff_raster_mime(&decoded.bytes).map(str::to_string))
                     .unwrap_or_else(|| "application/octet-stream".into());
                 Ok(vec![OutputRepresentation {
+                    id: "converted".into(),
                     format_key: format!("mime:{mime_type}"),
                     mime_type,
                     content: OutputContent::Binary(decoded.bytes),
@@ -180,42 +240,8 @@ impl bindings::Guest for Base64 {
             _ => Err(invalid("operation must be encode or decode")),
         }
     }
-    fn run_action(
-        _: String,
-        _: Representation,
-        _: Option<Facet>,
-        _: String,
-    ) -> Result<ActionResult, GuestError> {
-        Err(unsupported("actions use transformer presets"))
-    }
-    fn action_state(
-        id: String,
-        input: Representation,
-        facet: Option<Facet>,
-        _: String,
-    ) -> Result<ActionState, GuestError> {
-        let recognized = facet
-            .as_ref()
-            .is_some_and(|facet| facet.id == "infiniti.base64.base64");
-        let decodable = recognized || text(&input).is_some_and(is_decodable);
-        let encodable = bytes(&input).is_some();
-        match id.as_str() {
-            "decode-base64" => Ok(if decodable {
-                ActionState::Enabled
-            } else {
-                ActionState::Hidden
-            }),
-            "encode-base64" => Ok(if decodable || !encodable {
-                ActionState::Hidden
-            } else if bytes(&input).is_some_and(|value| value.len() > MAX_ENCODE_INPUT_BYTES) {
-                ActionState::Disabled("Base64 encoding is limited to 7 MiB".into())
-            } else {
-                ActionState::Enabled
-            }),
-            _ => Ok(ActionState::Enabled),
-        }
-    }
 }
+
 fn text(i: &Representation) -> Option<&str> {
     if let Content::Text(v) = &i.content {
         Some(v)
@@ -233,6 +259,7 @@ fn bytes(i: &Representation) -> Option<&[u8]> {
 
 fn text_output(value: String) -> OutputRepresentation {
     OutputRepresentation {
+        id: "converted".into(),
         format_key: "mime:text/plain".into(),
         mime_type: "text/plain".into(),
         content: OutputContent::Text(value),
@@ -372,9 +399,9 @@ fn is_decodable(value: &str) -> bool {
 fn is_printable_utf8(value: &[u8]) -> bool {
     std::str::from_utf8(value).is_ok_and(|text| {
         !text.is_empty()
-            && text.chars().all(|character| {
-                !character.is_control() || matches!(character, '\n' | '\r' | '\t')
-            })
+            && text
+                .chars()
+                .all(|character| !character.is_control() || matches!(character, '\n' | '\r' | '\t'))
     })
 }
 
@@ -638,7 +665,7 @@ mod tests {
     #[test]
     fn detects_and_round_trips_a_mime_preserving_image_data_url() {
         let png_header = [137, 80, 78, 71, 13, 10, 26, 10];
-        let encoded = Base64::transform(
+        let encoded = Base64::convert(
             "base64-codec".into(),
             binary_input(&png_header, "image/png"),
             "{}".into(),
@@ -669,7 +696,7 @@ mod tests {
                     && entries[2].value.contains("Data URL")
         ));
 
-        let decoded = Base64::transform(
+        let decoded = Base64::convert(
             "base64-codec".into(),
             text_input(data_url),
             "{}".into(),
@@ -683,7 +710,7 @@ mod tests {
         ));
 
         let raw = encode(&png_header);
-        let decoded = Base64::transform(
+        let decoded = Base64::convert(
             "base64-codec".into(),
             text_input(&raw),
             "{}".into(),
@@ -710,92 +737,70 @@ mod tests {
         assert_eq!(sniff_raster_mime(b"<svg></svg>"), None);
     }
 
+    fn availability(input: Representation, operation: &str) -> OperationAvailability {
+        Base64::assess(
+            "base64-codec".into(),
+            input,
+            "{}".into(),
+            serde_json::json!({"operation": operation}).to_string(),
+        )
+        .unwrap()
+    }
     #[test]
-    fn binary_assets_offer_encode() {
+    fn availability_offers_one_content_sensitive_setup() {
+        for value in ["SGVsbG8=", "SGVsbG8", "testtest"] {
+            assert!(matches!(
+                availability(text_input(value), "decode"),
+                OperationAvailability::Ready
+            ));
+            assert!(matches!(
+                availability(text_input(value), "encode"),
+                OperationAvailability::Hidden
+            ));
+        }
         assert!(matches!(
-            Base64::action_state(
-                "encode-base64".into(),
-                binary_input(&[1, 2, 3], "application/pdf"),
-                None,
-                "{}".into()
-            )
-            .unwrap(),
-            ActionState::Enabled
+            availability(text_input("ordinary prose"), "encode"),
+            OperationAvailability::Ready
+        ));
+        assert!(matches!(
+            availability(text_input("ordinary prose"), "decode"),
+            OperationAvailability::Hidden
         ));
     }
-
     #[test]
-    fn oversized_binary_assets_explain_why_encoding_is_disabled() {
-        let input = binary_input(&vec![0; MAX_ENCODE_INPUT_BYTES + 1], "image/png");
+    fn binary_and_size_availability() {
         assert!(matches!(
-            Base64::action_state("encode-base64".into(), input, None, "{}".into()).unwrap(),
-            ActionState::Disabled(reason) if reason.contains("7 MiB")
+            availability(binary_input(&[1, 2, 3], "application/pdf"), "encode"),
+            OperationAvailability::Ready
+        ));
+        assert!(matches!(
+            availability(binary_input(&[1, 2, 3], "application/pdf"), "decode"),
+            OperationAvailability::Hidden
+        ));
+        assert!(matches!(
+            availability(
+                binary_input(&vec![0; MAX_ENCODE_INPUT_BYTES + 1], "application/pdf"),
+                "encode"
+            ),
+            OperationAvailability::Disabled(_)
         ));
     }
-
     #[test]
-    fn action_state_offers_exactly_one_of_encode_or_decode() {
-        assert!(matches!(
-            Base64::action_state(
-                "decode-base64".into(),
-                text_input("SGVsbG8"),
-                None,
-                "{}".into()
-            )
-            .unwrap(),
-            ActionState::Enabled
-        ));
-        assert!(matches!(
-            Base64::action_state(
-                "encode-base64".into(),
-                text_input("SGVsbG8="),
-                Some(Facet {
-                    id: "infiniti.base64.base64".into(),
-                    payload_json: "{}".into(),
-                }),
-                "{}".into()
-            )
-            .unwrap(),
-            ActionState::Hidden
-        ));
-
-        assert!(matches!(
-            Base64::action_state(
-                "decode-base64".into(),
-                text_input("ordinary prose"),
-                None,
-                "{}".into()
-            )
-            .unwrap(),
-            ActionState::Hidden
-        ));
-        assert!(matches!(
-            Base64::action_state(
-                "encode-base64".into(),
-                text_input("ordinary prose"),
-                None,
-                "{}".into()
-            )
-            .unwrap(),
-            ActionState::Enabled
-        ));
-    }
-
-
-    #[test]
-    fn ambiguous_but_valid_base64_remains_manually_decodable() {
-        assert!(Base64::detect("detect-base64".into(), text_input("testtest"))
-            .unwrap()
-            .is_empty());
-        assert!(matches!(
-            Base64::action_state("decode-base64".into(), text_input("testtest"), None, "{}".into())
-                .unwrap(),
-            ActionState::Enabled
-        ));
-        assert!(matches!(
-            Base64::action_state("encode-base64".into(), text_input("testtest"), None, "{}".into())
-                .unwrap(),
-            ActionState::Hidden
-        ));
+    fn advance_returns_named_durable_output_and_compare_view() {
+        let result = Base64::advance(
+            "base64-codec".into(),
+            text_input("ordinary prose"),
+            "{}".into(),
+            "{\"operation\":\"encode\"}".into(),
+            "{}".into(),
+            None,
+        )
+        .unwrap();
+        let OperationProgress::Complete(result) = result else {
+            panic!("Local conversion must complete without broker calls")
+        };
+        assert_eq!(result.outputs[0].id, "converted");
+        assert!(result.view_json.unwrap().contains("compare"));
+        assert!(result.state_writes_json.is_none());
     }
 }

@@ -1,12 +1,16 @@
 schemaVersion = 3
-contractRevision = 1
+contractRevision = 3
 packageId = "infiniti.jwt-inspector"
-version = "1.2.3"
-apiVersion = "^3.0"
+version = "2.0.0"
+apiVersion = "^3.2"
 displayName = "JWT Inspector"
 description = "Inspect JWT headers, claims, and timestamps locally without implying signature verification."
 license = "MIT"
+
 iconAssets = { light = "icons/jwt-mark-light.svg", dark = "icons/jwt-mark-dark.svg" }
+
+[permissions]
+selectedInput = true
 
 [[settings]]
 id = "show-raw"
@@ -40,18 +44,19 @@ facetIds = ["infiniti.jwt-inspector.jwt"]
 id = "extract-jwt"
 kind = "transformer"
 displayName = "Extract JWT JSON"
-exposeInMenu = false
 parameterSchema = { type = "object", properties = { part = { type = "string", enum = ["header", "payload"] } }, required = ["part"] }
-[[contributions.matchers]]
-facetIds = ["infiniti.jwt-inspector.jwt"]
-
-[[contributions]]
+setupSelectorParameter = "part"
+defaultView = "result_only"
+resultControls = ["copy", "paste", "save_as_clip", "regenerate"]
+[[contributions.setups]]
 id = "copy-payload"
-kind = "action"
-displayName = "Copy JWT payload"
-iconAssets = { light = "icons/jwt-mark-light.svg", dark = "icons/jwt-mark-dark.svg" }
-placements = ["action_menu"]
-effects = ["copy"]
-handler = { kind = "transformer_preset", transformerId = "extract-jwt", parameters = { part = "payload" }, disposition = "copy" }
+displayName = "JWT payload"
+parameters = { part = "payload" }
+
+[[contributions.setups]]
+id = "extract-header"
+displayName = "JWT header"
+parameters = { part = "header" }
+
 [[contributions.matchers]]
 facetIds = ["infiniti.jwt-inspector.jwt"]

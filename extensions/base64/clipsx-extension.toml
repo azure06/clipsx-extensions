@@ -1,12 +1,15 @@
 schemaVersion = 3
-contractRevision = 1
+contractRevision = 3
 packageId = "infiniti.base64"
-version = "1.8.8"
-apiVersion = "^3.0"
+version = "2.0.0"
+apiVersion = "^3.2"
 displayName = "Base64"
 description = "Encode captured text and binary data, and decode Base64 or MIME-preserving data URLs locally."
 license = "MIT"
 iconAssets = { light = "icons/binary-mark-light.svg", dark = "icons/binary-mark-dark.svg" }
+
+[permissions]
+selectedInput = true
 
 [[contributions]]
 id = "detect-base64"
@@ -32,36 +35,20 @@ facetIds = ["infiniti.base64.base64"]
 id = "base64-codec"
 kind = "transformer"
 displayName = "Base64 codec"
-# Backs the encode-base64/decode-base64 actions below via transformer_preset,
-# which already cover this transformer's full parameter space one click at a
-# time — exposing it a second time as a generic Transform-menu entry would
-# just duplicate those two actions.
-exposeInMenu = false
 inputLimitBytes = 10485760
 parameterSchema = { type = "object", properties = { operation = { type = "string", enum = ["encode", "decode"] } }, required = ["operation"] }
-[[contributions.matchers]]
-storageKinds = ["text", "binary_asset"]
-
-[[contributions]]
+setupSelectorParameter = "operation"
+defaultView = "result_only"
+resultControls = ["copy", "paste", "save_as_clip", "regenerate"]
+[[contributions.setups]]
 id = "encode-base64"
-kind = "action"
 displayName = "Encode with Base64"
-iconAssets = { light = "icons/binary-mark-light.svg", dark = "icons/binary-mark-dark.svg" }
-placements = ["action_menu"]
-effects = ["preview", "copy", "save_as_clip"]
-inputLimitBytes = 10485760
-handler = { kind = "transformer_preset", transformerId = "base64-codec", parameters = { operation = "encode" }, disposition = "preview" }
+parameters = { operation = "encode" }
+
+[[contributions.setups]]
+id = "decode-base64"
+displayName = "Decode Base64"
+parameters = { operation = "decode" }
+
 [[contributions.matchers]]
 storageKinds = ["text", "binary_asset"]
-
-[[contributions]]
-id = "decode-base64"
-kind = "action"
-displayName = "Decode Base64"
-iconAssets = { light = "icons/binary-mark-light.svg", dark = "icons/binary-mark-dark.svg" }
-placements = ["action_menu"]
-effects = ["preview", "copy", "save_as_clip"]
-inputLimitBytes = 10485760
-handler = { kind = "transformer_preset", transformerId = "base64-codec", parameters = { operation = "decode" }, disposition = "preview" }
-[[contributions.matchers]]
-mimeTypes = ["text/plain"]

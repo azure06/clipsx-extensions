@@ -1,12 +1,16 @@
 schemaVersion = 3
-contractRevision = 1
+contractRevision = 3
 packageId = "infiniti.data-tools"
-version = "1.1.1"
-apiVersion = "^3.0"
+version = "2.0.0"
+apiVersion = "^3.2"
 displayName = "Data Tools"
 description = "Convert tables, structured data, TypeScript shapes, and URLs locally."
 license = "MIT"
+
 iconAssets = { light = "icons/package-light.svg", dark = "icons/package-dark.svg" }
+
+[permissions]
+selectedInput = true
 
 [[contributions]]
 id = "markdown-table-detector"
@@ -20,222 +24,105 @@ mimeTypes = ["text/plain", "text/markdown"]
 id = "data-transform"
 kind = "transformer"
 displayName = "Convert data"
-exposeInMenu = false
 parameterSchema = { type = "object", properties = { operation = { type = "string", enum = ["json-to-csv", "json-to-tsv", "json-to-markdown", "json-to-yaml", "json-to-toml", "json-to-typescript", "table-to-json", "table-to-csv", "table-to-tsv", "table-to-markdown", "markdown-to-json", "markdown-to-csv", "markdown-to-tsv", "yaml-to-json", "toml-to-json", "url-encode", "url-decode", "url-normalize", "url-query-to-json"] }, root_name = { type = "string", default = "Root", minLength = 1, maxLength = 80 } }, required = ["operation"], additionalProperties = false }
+setupSelectorParameter = "operation"
+parameterUi = [{ field = "root_name", label = "Root type name", control = "text", when = { field = "operation", equals = "json-to-typescript" }, required = true }]
+defaultView = "result_only"
+resultControls = ["copy", "paste", "save_as_clip", "regenerate"]
+[[contributions.setups]]
+id = "json-to-csv"
+displayName = "JSON to CSV"
+parameters = { operation = "json-to-csv" }
+
+[[contributions.setups]]
+id = "json-to-tsv"
+displayName = "JSON to TSV"
+parameters = { operation = "json-to-tsv" }
+
+[[contributions.setups]]
+id = "json-to-markdown"
+displayName = "JSON to Markdown table"
+parameters = { operation = "json-to-markdown" }
+
+[[contributions.setups]]
+id = "json-to-yaml"
+displayName = "JSON to YAML"
+parameters = { operation = "json-to-yaml" }
+
+[[contributions.setups]]
+id = "json-to-toml"
+displayName = "JSON to TOML"
+parameters = { operation = "json-to-toml" }
+
+[[contributions.setups]]
+id = "json-to-typescript"
+displayName = "JSON to TypeScript"
+parameters = { operation = "json-to-typescript" }
+
+[[contributions.setups]]
+id = "table-to-json"
+displayName = "Table to JSON"
+parameters = { operation = "table-to-json" }
+
+[[contributions.setups]]
+id = "table-to-csv"
+displayName = "Table to CSV"
+parameters = { operation = "table-to-csv" }
+
+[[contributions.setups]]
+id = "table-to-tsv"
+displayName = "Table to TSV"
+parameters = { operation = "table-to-tsv" }
+
+[[contributions.setups]]
+id = "table-to-markdown"
+displayName = "Table to Markdown"
+parameters = { operation = "table-to-markdown" }
+
+[[contributions.setups]]
+id = "markdown-table-to-json"
+displayName = "Markdown table to JSON"
+parameters = { operation = "markdown-to-json" }
+
+[[contributions.setups]]
+id = "markdown-table-to-csv"
+displayName = "Markdown table to CSV"
+parameters = { operation = "markdown-to-csv" }
+
+[[contributions.setups]]
+id = "markdown-table-to-tsv"
+displayName = "Markdown table to TSV"
+parameters = { operation = "markdown-to-tsv" }
+
+[[contributions.setups]]
+id = "yaml-to-json"
+displayName = "YAML to JSON"
+parameters = { operation = "yaml-to-json" }
+
+[[contributions.setups]]
+id = "toml-to-json"
+displayName = "TOML to JSON"
+parameters = { operation = "toml-to-json" }
+
+[[contributions.setups]]
+id = "url-encode"
+displayName = "URL encode"
+parameters = { operation = "url-encode" }
+
+[[contributions.setups]]
+id = "url-decode"
+displayName = "URL decode"
+parameters = { operation = "url-decode" }
+
+[[contributions.setups]]
+id = "url-normalize"
+displayName = "Normalize URL"
+parameters = { operation = "url-normalize" }
+
+[[contributions.setups]]
+id = "url-query-to-json"
+displayName = "URL query to JSON"
+parameters = { operation = "url-query-to-json" }
+
 [[contributions.matchers]]
 mimeTypes = ["text/plain", "text/markdown", "text/csv", "text/tab-separated-values", "application/json", "application/yaml", "application/x-yaml", "application/toml"]
-
-# JSON actions
-[[contributions]]
-id = "json-to-csv"
-kind = "action"
-displayName = "JSON to CSV"
-icon = "table"
-placements = ["action_menu"]
-effects = ["preview", "copy", "save_as_clip"]
-handler = { kind = "transformer_preset", transformerId = "data-transform", parameters = { operation = "json-to-csv" }, disposition = "preview" }
-[[contributions.matchers]]
-facetIds = ["core.data.json"]
-
-[[contributions]]
-id = "json-to-tsv"
-kind = "action"
-displayName = "JSON to TSV"
-icon = "table"
-placements = ["action_menu"]
-effects = ["preview", "copy", "save_as_clip"]
-handler = { kind = "transformer_preset", transformerId = "data-transform", parameters = { operation = "json-to-tsv" }, disposition = "preview" }
-[[contributions.matchers]]
-facetIds = ["core.data.json"]
-
-[[contributions]]
-id = "json-to-markdown"
-kind = "action"
-displayName = "JSON to Markdown table"
-icon = "text"
-placements = ["action_menu"]
-effects = ["preview", "copy", "save_as_clip"]
-handler = { kind = "transformer_preset", transformerId = "data-transform", parameters = { operation = "json-to-markdown" }, disposition = "preview" }
-[[contributions.matchers]]
-facetIds = ["core.data.json"]
-
-[[contributions]]
-id = "json-to-yaml"
-kind = "action"
-displayName = "JSON to YAML"
-icon = "database"
-placements = ["action_menu"]
-effects = ["preview", "copy", "save_as_clip"]
-handler = { kind = "transformer_preset", transformerId = "data-transform", parameters = { operation = "json-to-yaml" }, disposition = "preview" }
-[[contributions.matchers]]
-facetIds = ["core.data.json"]
-
-[[contributions]]
-id = "json-to-toml"
-kind = "action"
-displayName = "JSON to TOML"
-icon = "database"
-placements = ["action_menu"]
-effects = ["preview", "copy", "save_as_clip"]
-handler = { kind = "transformer_preset", transformerId = "data-transform", parameters = { operation = "json-to-toml" }, disposition = "preview" }
-[[contributions.matchers]]
-facetIds = ["core.data.json"]
-
-[[contributions]]
-id = "json-to-typescript"
-kind = "action"
-displayName = "JSON to TypeScript"
-icon = "code"
-placements = ["action_menu"]
-effects = ["preview", "copy", "save_as_clip"]
-parameterSchema = { type = "object", properties = { root_name = { type = "string", title = "Root type name", default = "Root", minLength = 1, maxLength = 80 } }, additionalProperties = false }
-handler = { kind = "transformer_preset", transformerId = "data-transform", parameters = { operation = "json-to-typescript" }, disposition = "preview" }
-[[contributions.matchers]]
-facetIds = ["core.data.json"]
-
-# CSV/TSV actions; the transformer detects the delimiter safely.
-[[contributions]]
-id = "table-to-json"
-kind = "action"
-displayName = "Table to JSON"
-icon = "braces"
-placements = ["action_menu"]
-effects = ["preview", "copy", "save_as_clip"]
-handler = { kind = "transformer_preset", transformerId = "data-transform", parameters = { operation = "table-to-json" }, disposition = "preview" }
-[[contributions.matchers]]
-facetIds = ["core.data.table"]
-
-[[contributions]]
-id = "table-to-csv"
-kind = "action"
-displayName = "Table to CSV"
-icon = "table"
-placements = ["action_menu"]
-effects = ["preview", "copy", "save_as_clip"]
-handler = { kind = "transformer_preset", transformerId = "data-transform", parameters = { operation = "table-to-csv" }, disposition = "preview" }
-[[contributions.matchers]]
-facetIds = ["core.data.table"]
-
-[[contributions]]
-id = "table-to-tsv"
-kind = "action"
-displayName = "Table to TSV"
-icon = "table"
-placements = ["action_menu"]
-effects = ["preview", "copy", "save_as_clip"]
-handler = { kind = "transformer_preset", transformerId = "data-transform", parameters = { operation = "table-to-tsv" }, disposition = "preview" }
-[[contributions.matchers]]
-facetIds = ["core.data.table"]
-
-[[contributions]]
-id = "table-to-markdown"
-kind = "action"
-displayName = "Table to Markdown"
-icon = "text"
-placements = ["action_menu"]
-effects = ["preview", "copy", "save_as_clip"]
-handler = { kind = "transformer_preset", transformerId = "data-transform", parameters = { operation = "table-to-markdown" }, disposition = "preview" }
-[[contributions.matchers]]
-facetIds = ["core.data.table"]
-
-# Strict GFM Markdown table actions.
-[[contributions]]
-id = "markdown-table-to-json"
-kind = "action"
-displayName = "Markdown table to JSON"
-icon = "braces"
-placements = ["action_menu"]
-effects = ["preview", "copy", "save_as_clip"]
-handler = { kind = "transformer_preset", transformerId = "data-transform", parameters = { operation = "markdown-to-json" }, disposition = "preview" }
-[[contributions.matchers]]
-facetIds = ["infiniti.data-tools.markdown-table"]
-
-[[contributions]]
-id = "markdown-table-to-csv"
-kind = "action"
-displayName = "Markdown table to CSV"
-icon = "table"
-placements = ["action_menu"]
-effects = ["preview", "copy", "save_as_clip"]
-handler = { kind = "transformer_preset", transformerId = "data-transform", parameters = { operation = "markdown-to-csv" }, disposition = "preview" }
-[[contributions.matchers]]
-facetIds = ["infiniti.data-tools.markdown-table"]
-
-[[contributions]]
-id = "markdown-table-to-tsv"
-kind = "action"
-displayName = "Markdown table to TSV"
-icon = "table"
-placements = ["action_menu"]
-effects = ["preview", "copy", "save_as_clip"]
-handler = { kind = "transformer_preset", transformerId = "data-transform", parameters = { operation = "markdown-to-tsv" }, disposition = "preview" }
-[[contributions.matchers]]
-facetIds = ["infiniti.data-tools.markdown-table"]
-
-# Typed YAML/TOML inputs retain their MIME identity.
-[[contributions]]
-id = "yaml-to-json"
-kind = "action"
-displayName = "YAML to JSON"
-icon = "braces"
-placements = ["action_menu"]
-effects = ["preview", "copy", "save_as_clip"]
-handler = { kind = "transformer_preset", transformerId = "data-transform", parameters = { operation = "yaml-to-json" }, disposition = "preview" }
-[[contributions.matchers]]
-mimeTypes = ["application/yaml", "application/x-yaml"]
-
-[[contributions]]
-id = "toml-to-json"
-kind = "action"
-displayName = "TOML to JSON"
-icon = "braces"
-placements = ["action_menu"]
-effects = ["preview", "copy", "save_as_clip"]
-handler = { kind = "transformer_preset", transformerId = "data-transform", parameters = { operation = "toml-to-json" }, disposition = "preview" }
-[[contributions.matchers]]
-mimeTypes = ["application/toml"]
-
-# URL actions use the core URL facet and stay fully offline.
-[[contributions]]
-id = "url-encode"
-kind = "action"
-displayName = "URL encode"
-iconAssets = { light = "icons/url-encode-light.svg", dark = "icons/url-encode-dark.svg" }
-placements = ["action_menu"]
-effects = ["preview", "copy", "save_as_clip"]
-handler = { kind = "transformer_preset", transformerId = "data-transform", parameters = { operation = "url-encode" }, disposition = "preview" }
-[[contributions.matchers]]
-facetIds = ["core.link.url"]
-
-[[contributions]]
-id = "url-decode"
-kind = "action"
-displayName = "URL decode"
-iconAssets = { light = "icons/url-decode-light.svg", dark = "icons/url-decode-dark.svg" }
-placements = ["action_menu"]
-effects = ["preview", "copy", "save_as_clip"]
-handler = { kind = "transformer_preset", transformerId = "data-transform", parameters = { operation = "url-decode" }, disposition = "preview" }
-[[contributions.matchers]]
-facetIds = ["core.link.url"]
-
-[[contributions]]
-id = "url-normalize"
-kind = "action"
-displayName = "Normalize URL"
-iconAssets = { light = "icons/url-normalize-light.svg", dark = "icons/url-normalize-dark.svg" }
-placements = ["action_menu"]
-effects = ["preview", "copy", "save_as_clip"]
-handler = { kind = "transformer_preset", transformerId = "data-transform", parameters = { operation = "url-normalize" }, disposition = "preview" }
-[[contributions.matchers]]
-facetIds = ["core.link.url"]
-
-[[contributions]]
-id = "url-query-to-json"
-kind = "action"
-displayName = "URL query to JSON"
-icon = "braces"
-placements = ["action_menu"]
-effects = ["preview", "copy", "save_as_clip"]
-handler = { kind = "transformer_preset", transformerId = "data-transform", parameters = { operation = "url-query-to-json" }, disposition = "preview" }
-[[contributions.matchers]]
-facetIds = ["core.link.url"]
