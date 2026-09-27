@@ -1,3 +1,4 @@
+#[allow(clippy::too_many_arguments)]
 mod bindings {
     use super::DataTools;
     wit_bindgen::generate!({ path: "../../sdk/wit", world: "extension" });
@@ -35,7 +36,7 @@ impl bindings::Guest for DataTools {
         _: Representation,
         _: Option<Facet>,
     ) -> Result<RenderModel, GuestError> {
-        Err(unsupported("Data Tools is action-only"))
+        Err(unsupported("Data Tools has no detail renderer"))
     }
     fn render_compact(
         _: String,
@@ -44,10 +45,103 @@ impl bindings::Guest for DataTools {
     ) -> Result<CompactModel, GuestError> {
         Err(unsupported("Data Tools has no compact renderer"))
     }
-    fn prepare_transform(_: String, _: Representation, _: String, parameters: String) -> Result<PrepareDecision, GuestError> {
-        Ok(PrepareDecision::Run(parameters))
+    fn assess(
+        id: String,
+        input: Representation,
+        _: String,
+        parameters: String,
+    ) -> Result<OperationAvailability, GuestError> {
+        if id != "data-transform" {
+            return Err(unsupported("unknown operation"));
+        }
+        let Some(raw) = text(&input) else {
+            return Ok(OperationAvailability::Hidden);
+        };
+        if raw.len() > MAX_INPUT_BYTES {
+            return Ok(OperationAvailability::Disabled(
+                "Input exceeds the package limit".into(),
+            ));
+        }
+        let params: Value =
+            serde_json::from_str(&parameters).map_err(|_| invalid("invalid parameters"))?;
+        let operation = params
+            .get("operation")
+            .and_then(Value::as_str)
+            .unwrap_or_default();
+        let root_name = params
+            .get("root_name")
+            .and_then(Value::as_str)
+            .unwrap_or("Root");
+        let first = raw
+            .lines()
+            .find(|line| !line.trim().is_empty())
+            .unwrap_or_default();
+        let is_tsv = first.matches('\t').count() > first.matches(',').count();
+        let relevant = match operation {
+            op if op.starts_with("json-") => json(raw).is_ok(),
+            op if op.starts_with("table-") => {
+                (first.contains(',') || first.contains('\t'))
+                    && !(op == "table-to-csv" && !is_tsv || op == "table-to-tsv" && is_tsv)
+            }
+            op if op.starts_with("markdown-") => parse_markdown_table(raw).is_ok(),
+            "yaml-to-json" => {
+                serde_yaml::from_str::<Value>(raw)
+                    .is_ok_and(|value| value.is_object() || value.is_array())
+                    && json(raw).is_err()
+            }
+            "toml-to-json" => toml::from_str::<toml::Value>(raw).is_ok(),
+            "url-decode" => raw.contains('%'),
+            "url-encode" => !raw.contains('%'),
+            "url-normalize" => url::Url::parse(raw.trim()).is_ok(),
+            "url-query-to-json" => {
+                url::Url::parse(raw.trim()).is_ok_and(|value| value.query().is_some())
+            }
+            _ => false,
+        };
+        Ok(if relevant && convert(operation, raw, root_name).is_ok() {
+            OperationAvailability::Ready
+        } else {
+            OperationAvailability::Hidden
+        })
     }
-    fn transform(
+    fn advance(
+        id: String,
+        input: Representation,
+        context: String,
+        parameters: String,
+        _: String,
+        _: Option<String>,
+    ) -> Result<OperationProgress, GuestError> {
+        let outputs = Self::convert(id, input, context, parameters)?;
+        Ok(OperationProgress::Complete(OperationComplete {
+            outputs,
+            view_json: Some(serde_json::json!({"tabs":[
+                {"id":"result","label":"Result","layout":"single","panels":[{"source":"output","outputId":"converted"}]},
+                {"id":"compare","label":"Compare","layout":"split","panels":[{"source":"input"},{"source":"output","outputId":"converted"}]}
+            ]}).to_string()),
+            state_writes_json: None,
+        }))
+    }
+    fn run_action(
+        _: String,
+        _: Representation,
+        _: Option<Facet>,
+        _: String,
+    ) -> Result<ActionResult, GuestError> {
+        Err(unsupported("Run Data Tools from Tools"))
+    }
+    fn action_state(
+        _: String,
+        _: Representation,
+        _: Option<Facet>,
+        _: String,
+    ) -> Result<ActionState, GuestError> {
+        Ok(ActionState::Hidden)
+    }
+}
+
+impl DataTools {
+    fn convert(
         id: String,
         input: Representation,
         _: String,
@@ -72,36 +166,11 @@ impl bindings::Guest for DataTools {
             .unwrap_or("Root");
         let (value, mime) = convert(operation, raw, root_name)?;
         Ok(vec![OutputRepresentation {
+            id: "converted".into(),
             format_key: format!("mime:{mime}"),
             mime_type: mime.into(),
             content: OutputContent::Text(value),
         }])
-    }
-    fn run_action(
-        _: String,
-        _: Representation,
-        _: Option<Facet>,
-        _: String,
-    ) -> Result<ActionResult, GuestError> {
-        Err(unsupported("Data Tools actions use transformer presets"))
-    }
-    fn action_state(
-        id: String,
-        input: Representation,
-        _: Option<Facet>,
-        _: String,
-    ) -> Result<ActionState, GuestError> {
-        if let Some(raw) = text(&input) {
-            let first = raw
-                .lines()
-                .find(|line| !line.trim().is_empty())
-                .unwrap_or("");
-            let is_tsv = first.matches('\t').count() > first.matches(',').count();
-            if (id == "table-to-csv" && !is_tsv) || (id == "table-to-tsv" && is_tsv) {
-                return Ok(ActionState::Hidden);
-            }
-        }
-        Ok(ActionState::Enabled)
     }
 }
 
@@ -532,6 +601,7 @@ fn failed(message: &str) -> GuestError {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::bindings::Guest;
     #[test]
     fn csv_round_trips_quotes_newlines_and_tabs() {
         let rows = parse_delimited("name,note\r\nAda,\"x,y\"\r\nLin,\"two\nlines\"", b',').unwrap();
@@ -616,5 +686,49 @@ mod tests {
         assert!(
             rows_to_objects(&[vec!["a".into(), "a".into()], vec!["1".into(), "2".into()]]).is_err()
         );
+    }
+    #[test]
+    fn current_contract_assesses_input_and_completes_named_outputs() {
+        let input = |value: &str| Representation {
+            format_key: "mime:text/plain".into(),
+            mime_type: Some("text/plain".into()),
+            storage_kind: "text".into(),
+            content: Content::Text(value.into()),
+        };
+        let parameters = serde_json::json!({"operation":"json-to-csv"}).to_string();
+        assert!(matches!(
+            DataTools::assess(
+                "data-transform".into(),
+                input("ordinary text"),
+                "{}".into(),
+                parameters.clone()
+            )
+            .unwrap(),
+            OperationAvailability::Hidden
+        ));
+        assert!(matches!(
+            DataTools::assess(
+                "data-transform".into(),
+                input(r#"[{"name":"Ada","age":37}]"#),
+                "{}".into(),
+                parameters.clone()
+            )
+            .unwrap(),
+            OperationAvailability::Ready
+        ));
+        let OperationProgress::Complete(result) = DataTools::advance(
+            "data-transform".into(),
+            input(r#"[{"name":"Ada","age":37}]"#),
+            "{}".into(),
+            parameters,
+            "{}".into(),
+            None,
+        )
+        .unwrap() else {
+            panic!("expected completion")
+        };
+        assert_eq!(result.outputs.len(), 1);
+        assert!(!result.outputs[0].id.is_empty());
+        assert!(result.view_json.unwrap().contains(&result.outputs[0].id));
     }
 }

@@ -1,3 +1,4 @@
+#[allow(clippy::too_many_arguments)]
 mod bindings {
     use super::MermaidViewer;
     wit_bindgen::generate!({ path: "../../sdk/wit", world: "extension" });
@@ -6,7 +7,7 @@ mod bindings {
 
 use bindings::clipsx::extension::types::{
     ActionResult, ActionState, CompactModel, Content, Facet, GuestError, GuestErrorCode,
-    OutputRepresentation, PrepareDecision, RenderModel, Representation,
+    OperationAvailability, OperationProgress, RenderModel, Representation,
 };
 
 struct MermaidViewer;
@@ -51,15 +52,22 @@ impl bindings::Guest for MermaidViewer {
     ) -> Result<CompactModel, GuestError> {
         Err(unsupported("Mermaid uses the host compact summary"))
     }
-    fn prepare_transform(_: String, _: Representation, _: String, parameters: String) -> Result<PrepareDecision, GuestError> {
-        Ok(PrepareDecision::Run(parameters))
-    }
-    fn transform(
+    fn assess(
         _: String,
         _: Representation,
         _: String,
         _: String,
-    ) -> Result<Vec<OutputRepresentation>, GuestError> {
+    ) -> Result<OperationAvailability, GuestError> {
+        Ok(OperationAvailability::Hidden)
+    }
+    fn advance(
+        _: String,
+        _: Representation,
+        _: String,
+        _: String,
+        _: String,
+        _: Option<String>,
+    ) -> Result<OperationProgress, GuestError> {
         Err(unsupported("Mermaid Viewer has no transformer"))
     }
     fn run_action(
@@ -95,7 +103,6 @@ fn contains_mermaid_fence(source: &str) -> bool {
         match fence {
             None => {
                 let language = trimmed[count..]
-                    .trim()
                     .split_whitespace()
                     .next()
                     .unwrap_or_default();

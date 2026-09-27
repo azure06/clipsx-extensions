@@ -22,7 +22,7 @@ them as `<package-id>/<contribution-id>`, while emitted semantic facets use
 ## Repository boundary
 
 - `extensions/` contains one independently versioned package per directory.
-- `sdk/wit/` is the pinned Extension API v3 contract used by the Rust guests.
+- `sdk/wit/` is the pinned Extension API v3.2 contract used by the Rust guests.
 - Generated `target/`, `component.wasm`, `.clipsx`, and `dist/` outputs are ignored.
 - Published `.clipsx` archives belong in checksum-pinned GitHub Releases, not
   Git; repository immutability is mandatory for every new release.
@@ -36,7 +36,7 @@ Merging to `main` makes a package eligible for release but does not publish it.
 When a release is wanted, run **Publish extension release** and select the
 package. The workflow reads the version from that package's manifest, rebuilds
 and validates it, rejects an existing tag, and publishes the immutable release.
-The v3 package versions use new immutable tags and archive assets.
+The v3.2 package versions use new immutable tags and archive assets.
 
 Publishing package bytes does not add them to the trusted catalog. Update the
 separate registry metadata through its normal pull request and signing flow only
@@ -63,3 +63,12 @@ Rust guests target `wasm32-unknown-unknown`; the package tool componentizes
 that core module without ambient WASI imports. Copy the release WASM to the
 package root as `component.wasm` before packing; it remains an ignored build
 artifact.
+
+For a complete local archive build, tests, deterministic packaging and conformance:
+
+```powershell
+npm run package -- <package> dist/<package>-2.0.0-v3.2.clipsx
+```
+
+Import the archive through ClipsX Developer Mode. A local build is not installed
+platform certification or a published release.
