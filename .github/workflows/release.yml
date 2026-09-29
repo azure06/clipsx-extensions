@@ -1,6 +1,8 @@
 name: Publish checked extension releases
 on:
-  pull_request:
+  # Base-branch context is required by the main-only publication environment.
+  # The job runs only after a same-repository PR has actually merged.
+  pull_request_target:
     branches: [main]
     types: [closed]
 permissions:

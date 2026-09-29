@@ -31,7 +31,11 @@ PR, tested Git tree, preparation run, version, tooling pin and both file hashes.
 Artifacts remain available for 90 days. The required `release-ready` check
 covers every affected package, including Rewrite, and confirms uploads exist.
 
-Merging triggers `release.yml`. The publisher compares the candidate's entire
+Merging triggers `release.yml` through the trusted base-branch
+`pull_request_target: closed` event. Its job requires an actual same-repository
+merge and checks out that approved merge commit, never an unmerged PR head.
+This keeps publication within the environments' `main` restriction.
+The publisher compares the candidate's entire
 tested tree to the merged tree, not only its version or branch. A moved base or
 changed source makes promotion fail; update the PR and prepare again before
 merge. It completes and verifies draft assets before publishing, then verifies
