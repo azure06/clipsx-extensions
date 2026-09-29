@@ -1,52 +1,153 @@
 name: Extension packages
+run-name: Prepare extension release (PR ${{ github.event.number || inputs.merged_pr }})
 
 on:
   pull_request:
-  push:
     branches: [main]
+  workflow_dispatch:
+    inputs:
+      merged_pr:
+        description: Recovery only - merged PR whose artifacts expired
+        required: true
+        type: number
 
 permissions:
   contents: read
+  actions: read
 
 jobs:
+  context:
+    runs-on: ubuntu-latest
+    outputs:
+      source_sha: ${{ steps.context.outputs.source_sha }}
+      base_sha: ${{ steps.context.outputs.base_sha }}
+      pr_number: ${{ steps.context.outputs.pr_number }}
+      head_sha: ${{ steps.context.outputs.head_sha }}
+    steps:
+      - uses: actions/checkout@v4
+      - id: context
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: node scripts/prepare-context.mjs
+
+  plan:
+    needs: context
+    runs-on: ubuntu-latest
+    outputs:
+      affected: ${{ steps.plan.outputs.affected }}
+      releases: ${{ steps.plan.outputs.releases }}
+      tool_ref: ${{ steps.plan.outputs.tool_ref }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ needs.context.outputs.source_sha }}
+          fetch-depth: 0
+      - run: node --test scripts/*.test.mjs
+      - id: plan
+        env:
+          BASE_SHA: ${{ needs.context.outputs.base_sha }}
+        run: |
+          node scripts/release-candidate.mjs plan "$BASE_SHA" > plan.json
+          node --input-type=module -e 'import{readFileSync,appendFileSync}from"node:fs";const p=JSON.parse(readFileSync("plan.json"));const ref=readFileSync(".github/extension-tool-ref","utf8").trim();if(!/^[a-f0-9]{40}$/.test(ref))throw Error("Tool revision must be pinned");appendFileSync(process.env.GITHUB_OUTPUT,`affected=${JSON.stringify(p.affected)}\nreleases=${JSON.stringify(p.release)}\ntool_ref=${ref}\n`)'
+
+  host-tool:
+    needs: plan
+    if: needs.plan.outputs.affected != '[]'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          repository: azure06/clipsx
+          ref: ${{ needs.plan.outputs.tool_ref }}
+          persist-credentials: false
+      - uses: actions/cache@v4
+        with:
+          path: src-tauri/target
+          key: extension-validator-${{ runner.os }}-${{ needs.plan.outputs.tool_ref }}-${{ hashFiles('src-tauri/Cargo.lock') }}
+      - run: sudo apt-get update && sudo apt-get install -y libwebkit2gtk-4.1-dev libappindicator3-dev librsvg2-dev patchelf libxdo-dev
+      - run: cargo build --locked --manifest-path src-tauri/Cargo.toml --bin clipsx-extension-tool
+      - uses: actions/upload-artifact@v4
+        with:
+          name: pinned-host-tool
+          path: src-tauri/target/debug/clipsx-extension-tool
+          retention-days: 1
+          if-no-files-found: error
+
   package:
+    needs: [context, plan, host-tool]
+    if: needs.plan.outputs.affected != '[]'
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
       matrix:
-        package: [ask-ai, base64, data-tools, jwt-inspector, mermaid-viewer, rewrite]
+        package: ${{ fromJSON(needs.plan.outputs.affected) }}
     steps:
       - uses: actions/checkout@v4
-      - name: Check out the pinned ClipsX package tool
-        uses: actions/checkout@v4
         with:
-          repository: azure06/clipsx
-          path: clipsx-host
-          ref: 5139245ef540e76a82b7ce746b5efb8f6ac3ff91
-      - name: Install host validator dependencies
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y libwebkit2gtk-4.1-dev libappindicator3-dev librsvg2-dev patchelf libxdo-dev
+          ref: ${{ needs.context.outputs.source_sha }}
+          fetch-depth: 0
+      - uses: actions/download-artifact@v4
+        with:
+          name: pinned-host-tool
+          path: host-tool
+      - run: chmod +x host-tool/clipsx-extension-tool
+      - name: Install validator dependencies
+        run: sudo apt-get update && sudo apt-get install -y libwebkit2gtk-4.1-dev libappindicator3-dev librsvg2-dev patchelf libxdo-dev
       - run: rustup target add wasm32-unknown-unknown
       - run: npm ci
-      - name: Build, test, and prove deterministic packaging
+      - name: Build and validate once
         env:
-          CLIPSX_REPO: ${{ github.workspace }}/clipsx-host
-        run: npm run package -- ${{ matrix.package }} dist/${{ matrix.package }}.clipsx
+          PACKAGE: ${{ matrix.package }}
+          CLIPSX_EXTENSION_TOOL: ${{ github.workspace }}/host-tool/clipsx-extension-tool
+        run: |
+          identity="$(node --input-type=module -e 'import{readFileSync}from"node:fs";import{identity}from"./scripts/release-candidate.mjs";console.log(JSON.stringify(identity(readFileSync(`extensions/${process.env.PACKAGE}/clipsx-extension.toml`,"utf8"))))')"
+          asset="$(echo "$identity" | jq -r .asset)"
+          tag="$(echo "$identity" | jq -r .tag)"
+          url="https://github.com/${GITHUB_REPOSITORY}/releases/download/${tag}/${asset}"
+          npm run package -- "$PACKAGE" "dist/$PACKAGE/$asset" "$url"
+      - name: Record candidate evidence
+        if: contains(fromJSON(needs.plan.outputs.releases), matrix.package)
+        env:
+          PACKAGE: ${{ matrix.package }}
+          PR_NUMBER: ${{ needs.context.outputs.pr_number }}
+          PR_HEAD_SHA: ${{ needs.context.outputs.head_sha }}
+        run: node scripts/release-candidate.mjs evidence "$PACKAGE"
       - uses: actions/upload-artifact@v4
+        if: contains(fromJSON(needs.plan.outputs.releases), matrix.package)
         with:
-          name: ${{ matrix.package }}
-          path: dist/${{ matrix.package }}.clipsx
+          name: candidate-${{ matrix.package }}
+          path: dist/${{ matrix.package }}/
+          retention-days: 90
           if-no-files-found: error
 
   repository-policy:
+    needs: context
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Enforce published identity policy
-        shell: bash
-        run: |
-          set -euo pipefail
-          ! grep -R -E 'firstparty\.|example\.ask-ai' \
-            --exclude-dir=target extensions sdk scripts README.md
+        with:
+          ref: ${{ needs.context.outputs.source_sha }}
+      - run: |
+          ! grep -R -E 'firstparty\.|example\.ask-ai' --exclude-dir=target extensions sdk scripts README.md
           test "$(find extensions -mindepth 1 -maxdepth 1 -type d | wc -l)" -eq 6
+
+  release-ready:
+    if: always()
+    needs: [context, plan, host-tool, package, repository-policy]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Require successful preparation and uploaded candidates
+        env:
+          CONTEXT: ${{ needs.context.result }}
+          PLAN: ${{ needs.plan.result }}
+          BUILD: ${{ needs.package.result }}
+          TOOL: ${{ needs.host-tool.result }}
+          POLICY: ${{ needs.repository-policy.result }}
+          RELEASES: ${{ needs.plan.outputs.releases }}
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          test "$CONTEXT" = success && test "$PLAN" = success && test "$POLICY" = success
+          [[ "$BUILD" == success || "$BUILD" == skipped ]]
+          [[ "$TOOL" == success || "$TOOL" == skipped ]]
+          gh api "repos/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID/artifacts" > artifacts.json
+          node --input-type=module -e 'import{readFileSync}from"node:fs";const a=JSON.parse(readFileSync("artifacts.json")).artifacts;for(const p of JSON.parse(process.env.RELEASES)){if(!a.some(x=>x.name===`candidate-${p}`&&!x.expired))throw Error(`Missing candidate ${p}`)}'

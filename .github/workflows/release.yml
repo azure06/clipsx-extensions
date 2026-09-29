@@ -1,73 +1,52 @@
-name: Publish extension release
-
+name: Publish checked extension releases
 on:
-  workflow_dispatch:
-    inputs:
-      package:
-        description: Package directory
-        required: true
-        type: choice
-        options: [ask-ai, base64, data-tools, jwt-inspector, mermaid-viewer, rewrite]
-
+  pull_request:
+    branches: [main]
+    types: [closed]
 permissions:
   contents: write
-
+  actions: read
 concurrency:
-  group: extension-release-${{ inputs.package }}
+  group: extension-publication-${{ github.event.pull_request.number }}
   cancel-in-progress: false
-
 jobs:
-  release:
+  publish:
+    if: github.event.pull_request.merged == true && github.event.pull_request.head.repo.full_name == github.repository
     runs-on: ubuntu-latest
+    environment: extension-publication
     steps:
-      - uses: actions/checkout@v4
-      - name: Check out the pinned ClipsX package tool
-        uses: actions/checkout@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
         with:
-          repository: azure06/clipsx
-          path: clipsx-host
-          ref: 5139245ef540e76a82b7ce746b5efb8f6ac3ff91
-      - name: Install host validator dependencies
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y libwebkit2gtk-4.1-dev libappindicator3-dev librsvg2-dev patchelf libxdo-dev
-      - run: rustup target add wasm32-unknown-unknown
-      - run: npm ci
-      - name: Validate release identity
+          ref: ${{ github.event.pull_request.merge_commit_sha }}
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Publish existing checked bytes - no build
         env:
           GH_TOKEN: ${{ github.token }}
-        shell: bash
+        run: node scripts/publish-release.mjs
+      - name: Detect publication handoff
+        id: published
         run: |
-          set -euo pipefail
-          test "$GITHUB_REF" = "refs/heads/main"
-          manifest="extensions/${{ inputs.package }}/clipsx-extension.toml"
-          grep -Eq '^packageId = "infiniti\.[a-z0-9-]+"$' "$manifest"
-          package_id="$(sed -n 's/^packageId = "\([^"]*\)"/\1/p' "$manifest")"
-          version="$(sed -n 's/^version = "\([^"]*\)"/\1/p' "$manifest")"
-          [[ "$version" =~ ^[0-9]+\.[0-9]+\.[0-9]+([+-][0-9A-Za-z.-]+)?$ ]]
-          release_slug="${package_id#infiniti.}"
-          tag="${release_slug}-v${version}"
-          ! gh release view "$tag" >/dev/null 2>&1
-          echo "PACKAGE_ID=$package_id" >> "$GITHUB_ENV"
-          echo "PACKAGE_VERSION=$version" >> "$GITHUB_ENV"
-          echo "RELEASE_SLUG=$release_slug" >> "$GITHUB_ENV"
-          echo "RELEASE_TAG=$tag" >> "$GITHUB_ENV"
-          echo "RELEASE_ASSET=${release_slug}-${version}.clipsx" >> "$GITHUB_ENV"
-      - name: Build reviewed release assets
+          if [[ -f published-releases.json ]]; then echo "present=true" >> "$GITHUB_OUTPUT"; fi
+      - name: Get narrowly scoped registry PR token
+        if: steps.published.outputs.present == 'true'
+        id: app
+        uses: actions/create-github-app-token@fee1f7d63c2ff003460e3d139729b119787bc349
+        with:
+          app-id: ${{ vars.CLIPSX_RELEASE_APP_ID }}
+          private-key: ${{ secrets.CLIPSX_RELEASE_APP_PRIVATE_KEY }}
+          owner: azure06
+          repositories: clipsx-registry
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        if: steps.published.outputs.present == 'true'
+        with:
+          repository: azure06/clipsx-registry
+          ref: main
+          path: registry
+          token: ${{ steps.app.outputs.token }}
+      - name: Open or update the metadata PR
+        if: steps.published.outputs.present == 'true'
+        working-directory: registry
         env:
-          CLIPSX_REPO: ${{ github.workspace }}/clipsx-host
-        run: |
-          url="https://github.com/${{ github.repository }}/releases/download/${RELEASE_TAG}/${RELEASE_ASSET}"
-          npm run package -- "${{ inputs.package }}" "dist/${RELEASE_ASSET}" "$url"
-      - name: Publish immutable release
-        env:
-          GH_TOKEN: ${{ github.token }}
-        shell: bash
-        run: |
-          set -euo pipefail
-          gh release create "$RELEASE_TAG" \
-            "dist/${RELEASE_ASSET}" \
-            "dist/${RELEASE_SLUG}-${PACKAGE_VERSION}.registry.json" \
-            --target "$GITHUB_SHA" \
-            --title "${{ inputs.package }} ${PACKAGE_VERSION}" \
-            --notes "Validated Infiniti ClipsX extension release."
+          GH_TOKEN: ${{ steps.app.outputs.token }}
+        run: node scripts/open-release-pr.mjs ../published-releases.json

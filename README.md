@@ -32,16 +32,25 @@ The package UI is fully local and offline. Runtime assets required by a package,
 including Mermaid and KaTeX WOFF2 fonts, are intentionally included in that
 package's release archive rather than the ClipsX application bundle.
 
-Merging to `main` makes a package eligible for release but does not publish it.
-When a release is wanted, run **Publish extension release** and select the
-package. The workflow reads the version from that package's manifest, rebuilds
-and validates it, rejects an existing tag, and publishes the immutable release.
-The v3.2 package versions use new immutable tags and archive assets.
+## Release flow
 
-Publishing package bytes does not add them to the trusted catalog. Update the
-separate registry metadata through its normal pull request and signing flow only
-after reviewing the release. This keeps the everyday release operation simple
-without giving an extension-source workflow access to the catalog signing key.
+```text
+Extension PR → test/build affected packages once → candidates + evidence
+             → merge → publish the exact checked archives
+             → automatically open/update the registry metadata PR
+Registry PR  → validate archives + prepare/sign catalog in that same PR
+             → merge → Discover reads the new catalog
+             → portable-setting approvals reconcile automatically
+```
+
+A versioned merge is publication approval. Documentation-only changes publish
+nothing. There is no routine manual dispatch or second release build. Releases
+and catalog approval remain separate human merges; the source repository never
+receives the catalog signing key.
+
+See [RELEASE.md](RELEASE.md) for required checks, one-time GitHub App setup and
+recovery, and the [release skill](.agents/skills/clipsx-extension-release/SKILL.md)
+for agent workflows.
 
 ## Local development
 
