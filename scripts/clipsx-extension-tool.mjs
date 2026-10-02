@@ -19,7 +19,7 @@ if (!existsSync(manifest)) {
 
 const result = spawnSync(
   'cargo',
-  ['run', '--quiet', '--manifest-path', manifest, '--bin', 'clipsx-extension-tool', '--', ...process.argv.slice(2)],
+  ['run', '--quiet', '--manifest-path', manifest, '--bin', 'clipsx-extension-tool', '--features', 'extension-tools', '--', ...process.argv.slice(2)],
   { stdio: 'inherit', shell: process.platform === 'win32' }
 )
 process.exit(result.status ?? 1)
