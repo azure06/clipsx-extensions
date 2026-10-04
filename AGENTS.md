@@ -8,6 +8,10 @@ changes and immutable released assets.
   package under review with the existing packaging command.
 - Publication or release recovery: use
   [clipsx-extension-release](.agents/skills/clipsx-extension-release/SKILL.md)
-  and [RELEASE.md](RELEASE.md). Do not rebuild at merge.
+  and [operating instructions](.agents/skills/clipsx-extension-release/references/operations.md). Do not rebuild at merge.
 - Run focused package/helper tests and keep documentation consistent with the
   actual workflows. Version and contract sources remain authoritative.
+
+## Documentation maintenance
+
+After completing a task, review affected documentation and skills. Update the authoritative source only. Remove obsolete statements and duplication; simplify existing text before adding sections. Describe current behavior, not implementation history. Code and tests own implementation details; retain contracts and operational requirements that cannot be safely inferred. Do not claim passing checks or production availability without evidence. Avoid maintaining roadmaps or completed investigation reports.

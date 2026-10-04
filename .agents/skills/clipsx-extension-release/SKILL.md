@@ -5,7 +5,7 @@ description: Prepare, publish or recover ClipsX extension releases, including ve
 
 # Extension release workflow
 
-1. Read [release requirements](../../../RELEASE.md) and the actual
+1. Read [release requirements](references/operations.md) and the actual
    [preparation](../../../.github/workflows/ci.yml) and
    [publisher](../../../.github/workflows/release.yml). Use the manifest and
    tooling pin as authoritative inputs; do not copy versions into instructions.
