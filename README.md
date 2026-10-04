@@ -48,7 +48,7 @@ nothing. There is no routine manual dispatch or second release build. Releases
 and catalog approval remain separate human merges; the source repository never
 receives the catalog signing key.
 
-See [RELEASE.md](RELEASE.md) for required checks, one-time GitHub App setup and
+See [operating instructions](.agents/skills/clipsx-extension-release/references/operations.md) for required checks, one-time GitHub App setup and
 recovery, and the [release skill](.agents/skills/clipsx-extension-release/SKILL.md)
 for agent workflows.
 
