@@ -15,9 +15,11 @@ export const identity = text => {
   return { packageId, version, tag: `${slug}-v${version}`, asset: `${slug}-${version}.clipsx` }
 }
 
+const packageInput = (path, pkg) => path.startsWith(`extensions/${pkg}/`) && path !== `extensions/${pkg}/README.md`
+
 export function affectedPackages(paths) {
   if (paths.some(p => p.startsWith('sdk/') || p === 'package-lock.json' || p === 'package.json' || /^scripts\/(package-extension|build-mermaid-runtime|sync-katex-assets|clipsx-extension-tool)\.mjs$/.test(p) || p === '.github/extension-tool-ref')) return [...packages]
-  return packages.filter(p => paths.some(path => path.startsWith(`extensions/${p}/`)))
+  return packages.filter(p => paths.some(path => packageInput(path, p)))
 }
 
 export const changesPackageBytes = path => path.startsWith('sdk/') || path === 'package-lock.json' || path === 'package.json' || /^scripts\/(package-extension|build-mermaid-runtime|sync-katex-assets)\.mjs$/.test(path)
@@ -89,7 +91,7 @@ if (process.argv[1] && import.meta.url === pathToFileURL(resolve(process.argv[1]
       const file = `extensions/${pkg}/clipsx-extension.toml`
       const current = identity(readFileSync(file, 'utf8'))
       const previous = identity(git('show', `${argument}:${file}`))
-      const packageChanged = paths.some(p => p.startsWith(`extensions/${pkg}/`))
+      const packageChanged = paths.some(path => packageInput(path, pkg))
       const sharedChanged = paths.some(changesPackageBytes)
       if (packageChanged || sharedChanged) assertVersionIncreased(previous.version, current.version)
       if (current.version !== previous.version) release.push(pkg)
