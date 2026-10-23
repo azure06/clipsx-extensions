@@ -72,7 +72,7 @@ data; it does not check out or execute the registry PR's scripts.
    `release-ready` instead of the old per-package checks. Do not temporarily
    remove protection to bootstrap the new flow.
 5. Finish the registry setup in its
-   [operations guide](https://github.com/azure06/clipsx-registry/blob/main/OPERATIONS.md).
+   [operations guide](https://github.com/azure06/clipsx-registry/blob/main/.agents/skills/clipsx-registry-publication/references/operations.md).
    Neither ordinary preparation jobs nor this repository receive the catalog
    signing key. Human merges replace the old per-run signing approval.
 
