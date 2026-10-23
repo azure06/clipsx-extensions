@@ -1,13 +1,28 @@
 # Rewrite
 
-Rewrite selected or newly captured plain text with ClipsX's configured local generation model. Automatic rules are configured by the host and results remain attached to the source clip until the user deletes or promotes them.
+Rewrite selected or newly captured plain text with ClipsX's configured generation
+model. The selected provider may run locally or be hosted. Results remain attached
+to the source clip until the user deletes or promotes them; Rewrite never copies
+or pastes automatically.
 
-## Local review
+## Configuration
 
-Built-in setups and saved setups use one durable operation. The guest requests a
-host model step, then returns the named `rewritten` output with Result and Compare
-views. Truncated generation fails visibly. The package never writes the clipboard.
+Choose an extension-generation model in Intelligence. Built-in and saved setups
+use the same durable operation, with Result and Compare views. Truncated generation
+fails visibly. Manual Rewrite runs the selected setup directly.
 
-The `on-copy` activation considers accepted plain-text captures only after an
-exact app rule is enabled and consented. Configure Local Text Generation first.
-Manual and automatic results remain attached to their source clip across restart.
+For automatic captures, open Rewrite's automation settings. Add multiple ordered
+rules for an application or All copied clips, choose a setup, and optionally ask a
+yes/no question under “Only run when…”. Conditions use General decisions. Configure
+that model before enabling conditional rules; a local model keeps this processing
+on the device, while a hosted provider receives the text.
+
+ClipsX tries application-specific rules first, then All copied clips as a fallback.
+Only the first match runs; an unconditional rule always matches. A Yes probability
+of at least 50% matches. Model failures stop the attempt and offer retry. Sample
+testing checks saved rules without saving the sample or generating a rewrite.
+
+The host owns conditions, consent, private/secret exclusions, capture snapshots,
+and restart recovery. No guest contract change is required. Only the selected
+setup generates output, originals remain unchanged, and attached results survive
+restart.
