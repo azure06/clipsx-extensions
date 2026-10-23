@@ -7,6 +7,7 @@ import { tmpdir } from 'node:os'
 
 test('docs do not build packages; SDK affects all six; package paths are isolated', () => {
   assert.deepEqual(affectedPackages(['README.md']), [])
+  assert.deepEqual(affectedPackages(['extensions/rewrite/README.md']), [])
   assert.equal(affectedPackages(['sdk/wit/clipsx-extension.wit']).length, 6)
   assert.deepEqual(affectedPackages(['extensions/rewrite/src/lib.rs']), ['rewrite'])
   assert.throws(() => assertVersionIncreased('2.0.0', '2.0.0'))
