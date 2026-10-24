@@ -1,7 +1,7 @@
 import { execFileSync } from 'node:child_process'
 import { readFileSync, mkdirSync, writeFileSync } from 'node:fs'
 import { resolve } from 'node:path'
-import { identity, verifyCandidate, verifyReleaseAssets, isPreparationRun, candidateArtifact, readCandidate } from './release-candidate.mjs'
+import { identity, verifyCandidate, verifyReleaseAssets, isPreparationRun, candidateArtifact, readCandidate, findRelease } from './release-candidate.mjs'
 
 const repository = process.env.GITHUB_REPOSITORY
 if (repository !== 'azure06/clipsx-extensions') throw Error('Unexpected publication repository')
@@ -50,19 +50,20 @@ for (const id of releasePackages) {
   const { metadataName, metadata, evidence, archive } = readCandidate(directory, id)
   verifyCandidate(evidence, metadata, archive, { repository, prNumber: pr.number, headSha: pr.head.sha, sourceTree: commit.tree.sha, toolRef, runId: run.id })
   if (id.packageId !== metadata.packageId || id.version !== metadata.version) throw Error('Candidate is not the package approved on main')
-  let release = await api(`releases/tags/${id.tag}`, true)
+  let release = await findRelease(api, id.tag)
   if (!release) {
-    gh('release', 'create', id.tag, '--draft', '--repo', repository, '--target', sourceSha, '--title', `${id.packageId} ${id.version}`, '--notes', `Prepared once by PR #${pr.number}; tooling ${toolRef}.`)
-    release = await api(`releases/tags/${id.tag}`)
+    release = JSON.parse(gh('api', '--method', 'POST', `repos/${repository}/releases`,
+      '-f', `tag_name=${id.tag}`, '-f', `target_commitish=${sourceSha}`, '-F', 'draft=true',
+      '-f', `name=${id.packageId} ${id.version}`, '-f', `body=Prepared once by PR #${pr.number}; tooling ${toolRef}.`))
   }
   const expectedAssets = [{ name: id.asset, hash: metadata.sha256, size: archive.length }, { name: metadataName, hash: evidence.metadataSha256, size: Buffer.byteLength(JSON.stringify(metadata) + '\n') }]
   if (release.draft) {
     const tag = await api(`git/ref/tags/${id.tag}`, true)
     if (release.target_commitish !== sourceSha || (tag && tag.object.sha !== sourceSha)) throw Error('Draft or tag belongs to a different revision; resolve the conflict without overwriting it')
     for (const name of verifyReleaseAssets(release, expectedAssets, true)) gh('release', 'upload', id.tag, resolve(directory, name), '--repo', repository)
-    verifyReleaseAssets(await api(`releases/tags/${id.tag}`), expectedAssets, true)
+    verifyReleaseAssets(await api(`releases/${release.id}`), expectedAssets, true)
     gh('release', 'edit', id.tag, '--draft=false', '--repo', repository)
-    release = await api(`releases/tags/${id.tag}`)
+    release = await api(`releases/${release.id}`)
   }
   verifyReleaseAssets(release, expectedAssets)
   entries.push({ ...metadata, publishedAt: release.published_at })
