@@ -1,7 +1,7 @@
 schemaVersion = 3
 contractRevision = 3
 packageId = "infiniti.mermaid"
-version = "2.0.0"
+version = "2.0.1"
 apiVersion = "^3.2"
 displayName = "Mermaid"
 description = "Fast, offline Mermaid diagrams and enhanced Markdown rendering."

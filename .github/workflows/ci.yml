@@ -42,7 +42,7 @@ jobs:
         with:
           ref: ${{ needs.context.outputs.source_sha }}
           fetch-depth: 0
-      - run: node --test scripts/*.test.mjs
+      - run: node --test scripts/*.test.mjs extensions/mermaid-viewer/ui/src/*.test.mjs
       - id: plan
         env:
           BASE_SHA: ${{ needs.context.outputs.base_sha }}
