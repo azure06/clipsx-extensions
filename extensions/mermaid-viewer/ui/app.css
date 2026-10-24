@@ -39,7 +39,7 @@ body { margin: 0; color: var(--text); }
 button { font: inherit; }
 .viewer { display: grid; min-height: 100vh; padding: 16px; }
 .viewer.dialog-view { gap: 12px; }
-.viewer:not(.document-view) { grid-template-rows: 1fr; }
+.viewer:not(.document-view) { height: 100vh; min-height: 0; grid-template-rows: minmax(0, 1fr); }
 .viewer.dialog-view:not(.document-view) { grid-template-rows: auto 1fr; }
 .viewer.document-view { align-content: start; }
 .app-bar, .diagram-toolbar { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
@@ -84,7 +84,7 @@ button { font: inherit; }
 .diagram-card {
   display: grid;
   min-height: 0;
-  grid-template-rows: auto minmax(220px, 1fr) auto;
+  grid-template-rows: auto minmax(180px, 1fr) auto auto;
   overflow: hidden;
   border: 1px solid var(--line);
   border-radius: 14px;
@@ -103,15 +103,18 @@ button { font: inherit; }
   min-height: 220px;
   overflow: hidden;
   touch-action: none;
-  cursor: grab;
+  cursor: default;
   background-color: var(--diagram-surface);
   background-image: radial-gradient(circle, color-mix(in srgb, var(--line) 62%, transparent) 1px, transparent 1px);
   background-size: 18px 18px;
 }
-.diagram-viewport.dragging { cursor: grabbing; }
-.diagram { display: grid; min-width: 100%; min-height: 100%; place-items: center; padding: 32px; transform: translate(var(--diagram-x), var(--diagram-y)) scale(var(--diagram-scale)); transform-origin: top left; user-select: none; }
-.diagram.fit { transform: none; }
-.diagram.fit svg { max-width: 100%; height: auto; }
+.diagram-viewport.pannable { cursor: grab; }
+.diagram-viewport.pannable.dragging { cursor: grabbing; }
+.diagram { position: absolute; left: 0; top: 0; transform-origin: top left; user-select: none; }
+.diagram-hint { margin: 0; padding: 4px 10px; color: var(--text-soft); font-size: 10px; }
+.diagram-viewport:focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; }
+.tool-button:disabled { opacity: .4; cursor: default; }
+.diagram-tools .tool-button { min-width: 30px; width: auto; padding: 0 5px; font-size: 11px; }
 .diagram.hidden { visibility: hidden; }
 .diagram svg { display: block; }
 .diagram-source { max-height: 34vh; margin: 0; overflow: auto; padding: 14px 16px; border-top: 1px solid var(--line); background: var(--canvas); white-space: pre-wrap; overflow-wrap: anywhere; }
@@ -160,8 +163,9 @@ button { font: inherit; }
 .fatal-error { margin: 16px; padding: 24px; border: 1px solid currentColor; border-radius: 12px; background: var(--danger-soft); }
 @media (max-width: 560px) {
   .viewer { padding: 8px; }
-  .identity span:not(.mark), .diagram-state, .diagram-tools output { display: none; }
-  .diagram { padding: 20px; }
+  .identity span:not(.mark), .diagram-state { display: none; }
+  .diagram-toolbar { flex-wrap: wrap; gap: 4px; }
+
 }
 @media (prefers-reduced-motion: no-preference) {
   .tool-button { transition: background-color 120ms ease, border-color 120ms ease, color 120ms ease; }
