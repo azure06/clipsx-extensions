@@ -24,6 +24,23 @@ export function affectedPackages(paths) {
 
 export const changesPackageBytes = path => path.startsWith('sdk/') || path === 'package-lock.json' || path === 'package.json' || /^scripts\/(package-extension|build-mermaid-runtime|sync-katex-assets)\.mjs$/.test(path)
 
+// The tag endpoint omits unpublished drafts. Resolve them through the authenticated
+// release list on retries, then use their stable release ID for subsequent reads.
+export async function findRelease(api, tag) {
+  const published = await api(`releases/tags/${encodeURIComponent(tag)}`, true)
+  if (published) return published
+  let match = null
+  for (let page = 1; page <= 10; page++) {
+    const releases = await api(`releases?per_page=100&page=${page}`)
+    for (const release of releases.filter(release => release.tag_name === tag)) {
+      if (match) throw Error('Ambiguous releases for the requested tag')
+      match = release
+    }
+    if (releases.length < 100) return match
+  }
+  throw Error('Release lookup exceeded its bound; no draft was created')
+}
+
 // Published releases are immutable. Only an interrupted draft may receive a
 // missing asset; an existing asset must already match the checked bytes.
 export function verifyReleaseAssets(release, expected, allowDraft = false) {

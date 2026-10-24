@@ -1,6 +1,6 @@
 import test from 'node:test'
 import assert from 'node:assert/strict'
-import { affectedPackages, changesPackageBytes, assertVersionIncreased, digest, verifyCandidate, verifyReleaseAssets, isPreparationRun, candidateArtifact, readCandidate } from './release-candidate.mjs'
+import { affectedPackages, changesPackageBytes, assertVersionIncreased, digest, verifyCandidate, verifyReleaseAssets, isPreparationRun, candidateArtifact, readCandidate, findRelease } from './release-candidate.mjs'
 import { mkdtempSync, writeFileSync, mkdirSync, rmSync } from 'node:fs'
 import { resolve } from 'node:path'
 import { tmpdir } from 'node:os'
@@ -28,6 +28,29 @@ test('upload retries complete drafts, skip exact immutable assets, and reject co
   assert.throws(() => verifyReleaseAssets({ ...published, immutable: false }, expected))
   assert.throws(() => verifyReleaseAssets({ ...published, assets: [{ ...asset, digest: 'wrong' }] }, expected, true))
   assert.throws(() => verifyReleaseAssets({ ...published, assets: [asset, asset] }, expected))
+})
+
+test('release lookup reuses unpublished drafts when the tag endpoint returns 404', async () => {
+  const draft = { id: 42, tag_name: 'mermaid-v2.0.1', draft: true }
+  const calls = []
+  const api = async (path, optional) => {
+    calls.push([path, optional])
+    return path.startsWith('releases/tags/') ? null : [draft]
+  }
+  assert.equal(await findRelease(api, draft.tag_name), draft)
+  assert.deepEqual(calls, [['releases/tags/mermaid-v2.0.1', true], ['releases?per_page=100&page=1', undefined]])
+  const published = { ...draft, draft: false }
+  assert.equal(await findRelease(async () => published, draft.tag_name), published)
+})
+
+test('release lookup paginates and never creates a draft from an incomplete or ambiguous lookup', async () => {
+  const draft = { id: 42, tag_name: 'mermaid-v2.0.1', draft: true }
+  const full = Array.from({ length: 100 }, (_, id) => ({ id, tag_name: `other-${id}` }))
+  const api = async path => path.startsWith('releases/tags/') ? null : path.endsWith('page=1') ? full : [draft]
+  assert.equal(await findRelease(api, draft.tag_name), draft)
+  assert.equal(await findRelease(async path => path.startsWith('releases/tags/') ? null : [], draft.tag_name), null)
+  await assert.rejects(findRelease(async path => path.startsWith('releases/tags/') ? null : [draft, { ...draft, id: 43 }], draft.tag_name), /Ambiguous/)
+  await assert.rejects(findRelease(async path => path.startsWith('releases/tags/') ? null : full, draft.tag_name), /bound/)
 })
 
 test('promotion binds archive and metadata to the exact merged tree, PR, tooling and run', () => {
